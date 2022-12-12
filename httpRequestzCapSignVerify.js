@@ -5,33 +5,23 @@ import { verifyCapabilityInvocation } from '@digitalbazaar/http-signature-zcap-v
 import { CryptoLD } from 'crypto-ld';
 import { constants as securityContextConstants } from 'security-context';
 import { getEd25519KeyPair } from './ed25519KeyPair.js';
-
-const { SECURITY_CONTEXT_V2_URL } = securityContextConstants;
 import {
   createRootCapability,
   documentLoader as zcapDocLoader
 } from '@digitalbazaar/zcap';
 
-
-// We can support more keys like RSA here
-const keyPairs = [{
-  name: 'Ed25519VerificationKey2020',
-  KeyPair: Ed25519VerificationKey2020,
-  Suite: Ed25519Signature2020
-}];
-
-const { KeyPair, Suite } = keyPairs[0];
-// const keyId = 'did:key:foo';
-// const controller = 'did:test:controller';
-// const _id = `${keyId}:12312312312`;
-const keyPair123 = await getEd25519KeyPair() //KeyPair.generate({ controller, id: _id });
-const controller = keyPair123.controller
-console.log('Generating Ed25519VerificationKey2020 keypair...........')
-console.log({ keyPair123: keyPair123.export({ publicKey: true, includeContext: true }) })
-
+// Preparing some gbl variables
+const { SECURITY_CONTEXT_V2_URL } = securityContextConstants;
 const TEST_URL = 'https://www.test.org/read/foo';
 const method = 'GET';
 
+// Get the key pair
+const keyPair123 = await getEd25519KeyPair();
+const controller = keyPair123.controller
+console.log('Generating Ed25519VerificationKey2020 keypair...........')
+console.log({ keyPair123: keyPair123.export({ publicKey: true, privateKey:true, includeContext: true }) })
+
+// Sign HTTP request
 async function signHTTPRequest() {
   console.log('Singning http request using Ed25519VerificationKey2020 privatekey/signer...........')
   const signed = await signCapabilityInvocation({
@@ -46,10 +36,14 @@ async function signHTTPRequest() {
   });
 
   console.log(signed)
-  await verifyHTTPRequest({ signed, Suite, keyPair: keyPair123 })
+  // Deleting the private key just to make we are accendentially not passing it to verify function
+  delete keyPair123.privateKeyMultibase
+  console.log(keyPair123)
+  await verifyHTTPRequest({ signed, keyPair: keyPair123 })
 }
 
-async function verifyHTTPRequest({ signed, Suite, keyPair }) {
+// Verify HTTP request
+async function verifyHTTPRequest({ signed, keyPair }) {
   console.log('Verifiying http request using Ed25519VerificationKey2020 ...........')
 
   const { host } = new URL(TEST_URL);
@@ -57,7 +51,8 @@ async function verifyHTTPRequest({ signed, Suite, keyPair }) {
 
   const keyId = keyPair.id;
 
-  const suite = new Suite({
+  // Using Ed25519Signature2020 suite
+  const suite = new Ed25519Signature2020({
     verificationMethod: keyId,
     key: keyPair
   });
@@ -124,6 +119,9 @@ async function verifyHTTPRequest({ signed, Suite, keyPair }) {
   })
 };
 
-
-
 signHTTPRequest();
+
+// TODO: Need to try sending the signed encrypted message. check the transmute edv client repo for reference
+// await httpClient.post(url, {agent, json: encrypted, headers});
+
+

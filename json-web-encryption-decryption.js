@@ -19,7 +19,7 @@ async function start(){
     keyAgreementKey
   })
 
-  return
+  
   console.log('Ready for encryption and decryption using X25519KeyAgreementKey2020 ...................');
 
   
@@ -64,22 +64,6 @@ async function start(){
   const object = await cipher.decryptObject({ jwe: jweDoc, keyAgreementKey });
   console.log('Decrypted text ......')
   console.log(object)
-
-
-  //   await httpClient.post(url, {agent, json: encrypted, headers});
-
-  // // const didDoc = await veresDriver.get({did});
-  // const authnKey = didDoc.verificationMethod[0]
-  // console.log(authnKey)
-  // const edKeyPair = await Ed25519VerificationKey2020.from(authnKey);
-  // const keyPair = X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({keyPair: edKeyPair});
-
-  // console.log({
-  //     keyPair,
-  //     edKeyPair
-  // })
-
-
 }
 
 start()
