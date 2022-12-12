@@ -39,14 +39,28 @@ export async function getEd25519KeyPair() {
     const hsSdk = new HypersignSsiSDK(wallet, hidNodeEp.rpc, hidNodeEp.rest, hidNodeEp.namespace);
     await hsSdk.init()
     const seed = Bip39.decode(mnemonic) // seed for keys 
+
+
+
     const didKeys = await hsSdk.did.generateKeys({ seed }) // generate keys from seed
-    const did = await hsSdk.did.generate({    // generate did from keys
-        publicKeyMultibase: didKeys.publicKeyMultibase,
-    })    
+    
+    
+    
+    // const did = await hsSdk.did.generate({    // generate did from keys
+    //     publicKeyMultibase: didKeys.publicKeyMultibase,
+    // })    
+
+    
+    const {didDocument}=await hsSdk.did.resolve({
+        did:'did:hid:testnet:zBsgb2aLJfMZArfXwjejSX8gMVz1k5zhf5bEn3WACz2wG',
+        ed25519verificationkey2020:true
+    })
+    
     const kp = await Ed25519VerificationKey2020.from({    // generate Ed25519VerificationKey2020 Object from keys
-        controller: did.id, // Key Controller 
+         // Key ID
+        controller: didDocument.id, // Key Controller 
         type:Ed25519VerificationKey2020.SUITE_ID,
-        publicKeyMultibase: didKeys.publicKeyMultibase,
+        publicKeyMultibase: didDocument.verificationMethod[0].publicKeyMultibase,
         privateKeyMultibase: didKeys.privateKeyMultibase,
     })
     return kp;
