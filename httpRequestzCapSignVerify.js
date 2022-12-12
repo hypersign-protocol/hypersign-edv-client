@@ -5,6 +5,7 @@ import { verifyCapabilityInvocation } from '@digitalbazaar/http-signature-zcap-v
 import { CryptoLD } from 'crypto-ld';
 import { constants as securityContextConstants } from 'security-context';
 import { getEd25519KeyPair } from './ed25519KeyPair.js';
+import message from './message.js';
 import {
   createRootCapability,
   documentLoader as zcapDocLoader
@@ -17,7 +18,6 @@ const method = 'GET';
 
 // Get the key pair
 const keyPair123 = await getEd25519KeyPair();
-const controller = keyPair123.controller
 console.log('Generating Ed25519VerificationKey2020 keypair...........')
 console.log({ keyPair123: keyPair123.export({ publicKey: true, privateKey:true, includeContext: true }) })
 
@@ -28,11 +28,13 @@ async function signHTTPRequest() {
     url: TEST_URL,
     method,
     headers: {
+      // digest signature
+      // authorization header
       date: new Date().toUTCString()
     },
-    json: { foo: true },
+    json: message, // should be encrypted message 
     invocationSigner: keyPair123.signer(),
-    capabilityAction: 'read'
+    capabilityAction: 'read' // ''write|read''
   });
 
   console.log(signed)
@@ -57,10 +59,10 @@ async function verifyHTTPRequest({ signed, keyPair }) {
     key: keyPair
   });
   const documentLoader = async uri => {
-    if (uri === controller) {
+    if (uri === keyPair.controller) {
       const doc = {
         '@context': SECURITY_CONTEXT_V2_URL,
-        id: controller,
+        id: keyPair.controller,
         capabilityInvocation: [keyId]
       };
       return {
@@ -99,7 +101,7 @@ async function verifyHTTPRequest({ signed, keyPair }) {
     return { verifier, verificationMethod };
   }
   
-  const rootCapability = createRootCapability({ controller, invocationTarget: TEST_URL });
+  const rootCapability = createRootCapability({ controller: keyPair123.controller, invocationTarget: TEST_URL });
 
   const { verified, error } = await verifyCapabilityInvocation({
     url: TEST_URL,
