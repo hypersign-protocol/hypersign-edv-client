@@ -13,17 +13,12 @@ async function start(){
   // Add controllers and give it an Id if it is not given in Ed25519VerificationKey2020
   // keyAgreementKey.controller = !keyAgreementKey.controller ? "some-random-controller" : keyAgreementKey.controller;
   // keyAgreementKey.id = !keyAgreementKey.id ? `${keyAgreementKey.controller}#${keyAgreementKey.fingerprint()}`: keyAgreementKey.id;
-
   console.log({
     keyPair1,
     keyAgreementKey
   })
 
-  
   console.log('Ready for encryption and decryption using X25519KeyAgreementKey2020 ...................');
-
-  
-
   console.log('Plaing text ......')
   // Plain text object to sign
   const obj = { key: 'value' };
