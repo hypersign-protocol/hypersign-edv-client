@@ -4,16 +4,19 @@ import { Ed25519Signature2020 } from '@digitalbazaar/ed25519-signature-2020';
 import { verifyCapabilityInvocation } from '@digitalbazaar/http-signature-zcap-verify'
 import { CryptoLD } from 'crypto-ld';
 import { constants as securityContextConstants } from 'security-context';
-import { getEd25519KeyPair } from './ed25519KeyPair.js';
+import { getKP as  getEd25519KeyPair } from './ed25519KeyPair.js';
 import message from './message.js';
 import {
   createRootCapability,
   documentLoader as zcapDocLoader
 } from '@digitalbazaar/zcap';
 
+import {httpClient, DEFAULT_HEADERS} from '@digitalbazaar/http-client';
+
 // Preparing some gbl variables
 const { SECURITY_CONTEXT_V2_URL } = securityContextConstants;
-const TEST_URL = 'https://www.test.org/read/foo';
+const TEST_URL = 'https://api.edvs.hypersign.id/read/foo';
+const BASE_URL = 'http://localhost:3001';
 const method = 'GET';
 
 // Get the key pair
@@ -21,27 +24,42 @@ const keyPair123 = await getEd25519KeyPair();
 console.log('Generating Ed25519VerificationKey2020 keypair...........')
 console.log({ keyPair123: keyPair123.export({ publicKey: true, privateKey:true, includeContext: true }) })
 
+const edvId = '62473c97-283c-4369-832e-587778255611';
+const url = `${BASE_URL}/api/v1/edvs/${edvId}/docs`
 // Sign HTTP request
 async function signHTTPRequest() {
   console.log('Singning http request using Ed25519VerificationKey2020 privatekey/signer...........')
-  const signed = await signCapabilityInvocation({
-    url: TEST_URL,
-    method,
+  const signedHeader = await signCapabilityInvocation({
+    url,
+    method: 'POST',
     headers: {
       // digest signature
-      // authorization header
+      // authorization header,
+      controller: keyPair123.controller,
+      vermethodid: keyPair123.id,
       date: new Date().toUTCString()
     },
     json: message, // should be encrypted message 
     invocationSigner: keyPair123.signer(),
-    capabilityAction: 'read' // ''write|read''
+    capabilityAction: 'write' // ''write|read''
   });
 
-  console.log(signed)
+  console.log(signedHeader)
   // Deleting the private key just to make we are accendentially not passing it to verify function
   delete keyPair123.privateKeyMultibase
-  console.log(keyPair123)
-  await verifyHTTPRequest({ signed, keyPair: keyPair123 })
+  
+  
+ 
+  const response = await httpClient.post(url, {headers: signedHeader, json: message});
+  console.log(response.status)
+  if(response.status === 201){
+    console.log('Successfully created!')
+  } else {
+    console.log('Failed to create')
+  }
+
+
+  //await verifyHTTPRequest({ signed: signedHeader, keyPair: keyPair123 })
 }
 
 // Verify HTTP request
