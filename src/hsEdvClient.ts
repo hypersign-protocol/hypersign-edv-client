@@ -1,8 +1,9 @@
 import Config from './config';
 import Utils from './utils';
+import HypersignEncryptedDocument from './hsEncryptedDocument';
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
-import { IDataVaultConfiguration, HmacKeyTypes, KeyAgreementKeyTypes, IKeyAgreementKey, IHmac } from './hsEdvDataModels';
-import { IEncryptedDoc } from './hsDocumentDataModels';
+import { IDataVaultConfiguration, HmacKeyTypes, KeyAgreementKeyTypes } from './hsEdvDataModels';
+
 import HypersignCipher from './hsCipher';
 import HypersignZCapHttpSigner from './hsZCapHttpSig';
 export default class HypersignEdvClient {
@@ -11,7 +12,6 @@ export default class HypersignEdvClient {
   private hsCipher: HypersignCipher;
   private hsHttpSigner: HypersignZCapHttpSigner;
   private keyAgreementKey: Ed25519VerificationKey2020;
-
   constructor({
     keyResolver,
     url,
@@ -92,6 +92,7 @@ export default class HypersignEdvClient {
     const jwe = await this.hsCipher.encryptObject({
       plainObject: document,
     });
+    const hsEncDoc = new HypersignEncryptedDocument({ jwe });
 
     // form the http request header by signing the header
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
@@ -106,15 +107,16 @@ export default class HypersignEdvClient {
       url: edvDocAddUrl,
       method: 'POST',
       headers,
-      encryptedObject: jwe,
+      encryptedObject: hsEncDoc.get(),
       capabilityAction: 'write',
     });
 
+    console.log(jwe);
     // make the call to store
     const resp = await Utils._makeAPICall({
       url: edvDocAddUrl,
       method: 'POST',
-      body: jwe,
+      body: hsEncDoc.get(),
       headers: signedHeader,
     });
 
