@@ -110,8 +110,7 @@ export default class HypersignEdvClient {
       encryptedObject: hsEncDoc.get(),
       capabilityAction: 'write',
     });
-
-    console.log(jwe);
+    
     // make the call to store
     const resp = await Utils._makeAPICall({
       url: edvDocAddUrl,
