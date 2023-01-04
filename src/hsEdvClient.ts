@@ -83,7 +83,6 @@ export default class HypersignEdvClient {
   }
 
   public async getEdvConfig(edvId: string) {
-    console.log(edvId);
     throw new Error('Method not implemented');
   }
 
@@ -110,7 +109,7 @@ export default class HypersignEdvClient {
       encryptedObject: hsEncDoc.get(),
       capabilityAction: 'write',
     });
-    
+
     // make the call to store
     const resp = await Utils._makeAPICall({
       url: edvDocAddUrl,
