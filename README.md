@@ -39,7 +39,7 @@ const hsEDVClient = new HypersignEdvClient({
 ### Register an EDV
 
 ```js
-const config = {
+ const config = {
   controller: 'did:example:123456789',
   keyAgreementKey: {
     id: 'https://example.com/kms/12345',
@@ -49,6 +49,7 @@ const config = {
     id: 'https://example.com/kms/67891',
     type: 'Sha256HmacKey2020',
   },
+  edvId: "my-edv-1" // Optional 
 };
 const data = await hsEDVClient.registerEdv(config);
 ```
@@ -59,6 +60,35 @@ const data = await hsEDVClient.registerEdv(config);
 const edvId = data.id;
 const m = { foo: 'bar' };
 const res = await hsEDVClient.insertDoc(m, edvId);
+```
+
+
+
+### Update Doc
+
+```js
+// updating a doc 1st time
+  m.foo = 'bar2'; 
+  const { id } = res; 
+  const res2 = await hsEDVClient.updateDoc({document: m, documentId: id, edvId});
+  console.log(res2)
+
+```
+### Update Doc with new sequence
+
+```js
+ //updating a doc 3rd time with new sequence 
+  m.foo = 'bar34'; 
+  const res4 = await hsEDVClient.updateDoc({document: m, documentId: id, sequence: 1 , edvId});
+  console.log(res4)
+```
+
+### Fetch Doc
+
+```js
+// Fetching a doc with doc id from edv:  it shoul return 2 docs
+  const res5 = await hsEDVClient.fetchDoc({ documentId: id, edvId });
+  console.log(res5)
 ```
 
 ### Sample keyResolver
