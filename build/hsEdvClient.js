@@ -73,6 +73,10 @@ var HypersignEdvClient = /** @class */ (function () {
                         if (!hsEdvDataModels_1.HmacKeyTypes[config.hmac.type]) {
                             throw new Error('Unsupported hmac type: ' + config.hmac.type);
                         }
+                        // Adding support for custom id
+                        if (config.edvId) {
+                            edvConfig.id = config.edvId;
+                        }
                         edvConfig.keyAgreementKey = {
                             id: config.keyAgreementKey.id,
                             type: hsEdvDataModels_1.KeyAgreementKeyTypes[config.keyAgreementKey.type],
@@ -113,17 +117,18 @@ var HypersignEdvClient = /** @class */ (function () {
             });
         });
     };
-    HypersignEdvClient.prototype.insertDoc = function (document, edvId) {
+    HypersignEdvClient.prototype.insertDoc = function (_a) {
+        var document = _a.document, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId;
         return __awaiter(this, void 0, void 0, function () {
             var jwe, hsEncDoc, edvDocAddUrl, headers, signedHeader, resp;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, this.hsCipher.encryptObject({
                             plainObject: document,
                         })];
                     case 1:
-                        jwe = _a.sent();
-                        hsEncDoc = new hsEncryptedDocument_1.default({ jwe: jwe });
+                        jwe = _b.sent();
+                        hsEncDoc = new hsEncryptedDocument_1.default({ jwe: jwe, id: documentId, sequence: sequence });
                         edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
                         headers = {
                             // digest signature
@@ -140,7 +145,7 @@ var HypersignEdvClient = /** @class */ (function () {
                                 capabilityAction: 'write',
                             })];
                     case 2:
-                        signedHeader = _a.sent();
+                        signedHeader = _b.sent();
                         return [4 /*yield*/, utils_1.default._makeAPICall({
                                 url: edvDocAddUrl,
                                 method: 'POST',
@@ -148,7 +153,7 @@ var HypersignEdvClient = /** @class */ (function () {
                                 headers: signedHeader,
                             })];
                     case 3:
-                        resp = _a.sent();
+                        resp = _b.sent();
                         return [2 /*return*/, resp];
                 }
             });

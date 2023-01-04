@@ -71,6 +71,7 @@ function register() {
                             id: 'https://example.com/kms/67891',
                             type: 'Sha256HmacKey2020',
                         },
+                        edvId: "my-edv-1" // Optional 
                     };
                     return [4 /*yield*/, hsEDVClient.registerEdv(config)];
                 case 2:
@@ -79,7 +80,7 @@ function register() {
                     edvId = data.id;
                     console.log('New edvId is: ' + edvId);
                     m = { 'foo': 'bar' };
-                    return [4 /*yield*/, hsEDVClient.insertDoc(m, edvId)];
+                    return [4 /*yield*/, hsEDVClient.insertDoc({ document: m, documentId: 'my-doc-1', edvId: edvId })];
                 case 3:
                     res = _a.sent();
                     console.log(res);
