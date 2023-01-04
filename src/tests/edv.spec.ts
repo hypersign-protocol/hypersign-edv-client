@@ -22,7 +22,7 @@ async function register(){
     },
     edvId: "my-edv-1" // Optional 
   };
-  
+  // Registering the edv
   const data  = await hsEDVClient.registerEdv(config);
   console.log(data);
 
@@ -30,17 +30,30 @@ async function register(){
   console.log('New edvId is: ' + edvId)
   const m = { 'foo': 'bar' };
 
+  // Inserting a doc in edv
   const res = await hsEDVClient.insertDoc({document: m, edvId});
   console.log(res)
 
-  m.foo = 'bar2'; //updating a doc 1st time
+  // updating a doc 1st time
+  m.foo = 'bar2'; 
   const { id } = res; 
   const res2 = await hsEDVClient.updateDoc({document: m, documentId: id, edvId});
   console.log(res2)
 
-  m.foo = 'bar3'; //updating a doc 2nd time with same sequence (default will be 0)
+  //updating a doc 2nd time with same sequence (default will be 0)
+  m.foo = 'bar3'; 
   const res3 = await hsEDVClient.updateDoc({document: m, documentId: id, edvId});
   console.log(res3)
+
+  //updating a doc 3rd time with new sequence 
+  m.foo = 'bar34'; 
+  const res4 = await hsEDVClient.updateDoc({document: m, documentId: id, sequence: 1 , edvId});
+  console.log(res4)
+
+  // Fetching a doc with doc id from edv:  it shoul return 2 docs
+  const res5 = await hsEDVClient.fetchDoc({ documentId: id, edvId });
+  console.log(res5)
+
 
 }
 

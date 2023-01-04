@@ -1,4 +1,8 @@
 "use strict";
+/**
+ * Copyright (c) Hypermine Pvt. Ltd.
+ * 4 January, 2023
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -56,8 +60,15 @@ var HypersignEdvClient = /** @class */ (function () {
         this.hsHttpSigner = new hsZCapHttpSig_1.default({ keyAgreementKey: this.keyAgreementKey });
     }
     /**
-     * {config.controller}
-     *
+     * Creates a new data vault for given configuration
+     * @param edvId Optional edv id
+     * @param invoker Optional invoker did
+     * @param delegator Optional delegator did
+     * @param referenceId Optional referenceId for data vault
+     * @param controller controller did
+     * @param keyAgreementKey keyAgreementKey
+     * @param hmac hmac
+     * @returns newly created data vault configuration
      */
     HypersignEdvClient.prototype.registerEdv = function (config) {
         return __awaiter(this, void 0, void 0, function () {
@@ -110,13 +121,14 @@ var HypersignEdvClient = /** @class */ (function () {
             });
         });
     };
-    HypersignEdvClient.prototype.getEdvConfig = function (edvId) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                throw new Error('Method not implemented');
-            });
-        });
-    };
+    /**
+     * Inserts a new docs in the data vault
+     * @param document doc to be updated in plain text
+     * @param documentId Id of the document
+     * @param edvId Id of the data vault
+     * @param sequence Optional sequence number, default is 0
+     * @returns updated document
+     */
     HypersignEdvClient.prototype.insertDoc = function (_a) {
         var document = _a.document, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId;
         return __awaiter(this, void 0, void 0, function () {
@@ -129,7 +141,6 @@ var HypersignEdvClient = /** @class */ (function () {
                     case 1:
                         jwe = _b.sent();
                         hsEncDoc = new hsEncryptedDocument_1.default({ jwe: jwe, id: documentId, sequence: sequence });
-                        console.log(hsEncDoc);
                         edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
                         headers = {
                             // digest signature
@@ -161,6 +172,14 @@ var HypersignEdvClient = /** @class */ (function () {
             });
         });
     };
+    /**
+     * Updates doc in the data vault
+     * @param document doc to be updated in plain text
+     * @param documentId Id of the document
+     * @param edvId Id of the data vault
+     * @param sequence Optional sequence number, default is 0
+     * @returns newly created document
+     */
     HypersignEdvClient.prototype.updateDoc = function (_a) {
         var document = _a.document, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId;
         return __awaiter(this, void 0, void 0, function () {
@@ -204,18 +223,42 @@ var HypersignEdvClient = /** @class */ (function () {
             });
         });
     };
-    HypersignEdvClient.prototype.fetchAllDocs = function () {
+    /**
+     * Fetchs docs related to a particular documentId
+     * @param documentId Id of the document
+     * @param edvId Id of the data vault
+     * @param sequence Optional sequence number, default is 0
+     * @returns all documents (with sequences if not passed) for a documentId
+     */
+    HypersignEdvClient.prototype.fetchDoc = function (_a) {
+        var documentId = _a.documentId, edvId = _a.edvId, sequence = _a.sequence;
+        return __awaiter(this, void 0, void 0, function () {
+            var edvDocAddUrl, resp;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
+                        return [4 /*yield*/, utils_1.default._makeAPICall({
+                                url: edvDocAddUrl,
+                                method: 'GET',
+                            })];
+                    case 1:
+                        resp = _b.sent();
+                        return [2 /*return*/, resp];
+                }
+            });
+        });
+    };
+    HypersignEdvClient.prototype.getEdvConfig = function (edvId) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 throw new Error('Method not implemented');
             });
         });
     };
-    HypersignEdvClient.prototype.fetchDoc = function (_a) {
-        var documentId = _a.documentId;
+    HypersignEdvClient.prototype.fetchAllDocs = function () {
         return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_b) {
-                console.log({ documentId: documentId });
+            return __generator(this, function (_a) {
                 throw new Error('Method not implemented');
             });
         });

@@ -55,7 +55,7 @@ function createClient() {
 }
 function register() {
     return __awaiter(this, void 0, void 0, function () {
-        var hsEDVClient, config, data, edvId, m, res, id, res2, res3;
+        var hsEDVClient, config, data, edvId, m, res, id, res2, res3, res4, res5;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, createClient()];
@@ -76,23 +76,37 @@ function register() {
                     return [4 /*yield*/, hsEDVClient.registerEdv(config)];
                 case 2:
                     data = _a.sent();
+                    console.log(data);
                     edvId = data.id;
+                    console.log('New edvId is: ' + edvId);
                     m = { 'foo': 'bar' };
                     return [4 /*yield*/, hsEDVClient.insertDoc({ document: m, edvId: edvId })];
                 case 3:
                     res = _a.sent();
                     console.log(res);
-                    m.foo = 'bar2'; //updating a doc
+                    // updating a doc 1st time
+                    m.foo = 'bar2';
                     id = res.id;
                     return [4 /*yield*/, hsEDVClient.updateDoc({ document: m, documentId: id, edvId: edvId })];
                 case 4:
                     res2 = _a.sent();
                     console.log(res2);
-                    m.foo = 'bar3'; //updating a doc
+                    //updating a doc 2nd time with same sequence (default will be 0)
+                    m.foo = 'bar3';
                     return [4 /*yield*/, hsEDVClient.updateDoc({ document: m, documentId: id, edvId: edvId })];
                 case 5:
                     res3 = _a.sent();
                     console.log(res3);
+                    //updating a doc 3rd time with new sequence 
+                    m.foo = 'bar34';
+                    return [4 /*yield*/, hsEDVClient.updateDoc({ document: m, documentId: id, sequence: 1, edvId: edvId })];
+                case 6:
+                    res4 = _a.sent();
+                    console.log(res4);
+                    return [4 /*yield*/, hsEDVClient.fetchDoc({ documentId: id, edvId: edvId })];
+                case 7:
+                    res5 = _a.sent();
+                    console.log(res5);
                     return [2 /*return*/];
             }
         });

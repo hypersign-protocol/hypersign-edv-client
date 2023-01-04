@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) Hypermine Pvt. Ltd.
+ * 4 January, 2023
+ */
+
 import Config from './config';
 import Utils from './utils';
 import HypersignEncryptedDocument from './hsEncryptedDocument';
@@ -30,8 +35,15 @@ export default class HypersignEdvClient {
   }
 
   /**
-   * {config.controller}
-   *
+   * Creates a new data vault for given configuration
+   * @param edvId Optional edv id
+   * @param invoker Optional invoker did
+   * @param delegator Optional delegator did
+   * @param referenceId Optional referenceId for data vault
+   * @param controller controller did
+   * @param keyAgreementKey keyAgreementKey
+   * @param hmac hmac
+   * @returns newly created data vault configuration
    */
   public async registerEdv(config: {
     edvId?: string;
@@ -88,10 +100,14 @@ export default class HypersignEdvClient {
     return edvConfig;
   }
 
-  public async getEdvConfig(edvId: string) {
-    throw new Error('Method not implemented');
-  }
-
+  /**
+   * Inserts a new docs in the data vault
+   * @param document doc to be updated in plain text
+   * @param documentId Id of the document
+   * @param edvId Id of the data vault
+   * @param sequence Optional sequence number, default is 0
+   * @returns updated document
+   */
   public async insertDoc({
     document,
     documentId,
@@ -138,6 +154,14 @@ export default class HypersignEdvClient {
     return resp;
   }
 
+  /**
+   * Updates doc in the data vault
+   * @param document doc to be updated in plain text
+   * @param documentId Id of the document
+   * @param edvId Id of the data vault
+   * @param sequence Optional sequence number, default is 0
+   * @returns newly created document
+   */
   public async updateDoc({
     document,
     documentId,
@@ -184,13 +208,55 @@ export default class HypersignEdvClient {
     return resp;
   }
 
-  public async fetchAllDocs() {
+  /**
+   * Fetchs docs related to a particular documentId
+   * @param documentId Id of the document
+   * @param edvId Id of the data vault
+   * @param sequence Optional sequence number, default is 0
+   * @returns all documents (with sequences if not passed) for a documentId
+   */
+  public async fetchDoc({ documentId, edvId, sequence }: { documentId: string; edvId: string; sequence?: number }) {
+    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
+
+    //// TODO:  need to figure out how will it work in read capability
+    /// CAUTION:::  for time being, I have skipped signature verification wicich is security vulnerabilities
+
+    // // encrypt the document
+    // const jwe = await this.hsCipher.encryptObject({
+    //   plainObject: { foo: 'bar' },
+    // });
+    // const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
+
+    // const headers = {
+    //   // digest signature
+    //   // authorization header,
+    //   controller: this.keyAgreementKey.controller,
+    //   vermethodid: this.keyAgreementKey.id,
+    //   date: new Date().toUTCString(),
+    // };
+    // const method = 'GET';
+    // const signedHeader = await this.hsHttpSigner.signHTTP({
+    //   url: edvDocAddUrl,
+    //   method,
+    //   headers,
+    //   encryptedObject: hsEncDoc.get(), // TODO: not sure why its not working with empty object. for GET request what data does it expect??
+    //   capabilityAction: 'read',
+    // });
+
+    // make the call to store
+    const resp = await Utils._makeAPICall({
+      url: edvDocAddUrl,
+      method: 'GET',
+    });
+
+    return resp;
+  }
+
+  public async getEdvConfig(edvId: string) {
     throw new Error('Method not implemented');
   }
 
-  public async fetchDoc({ documentId }) {
-    console.log({ documentId });
-
+  public async fetchAllDocs() {
     throw new Error('Method not implemented');
   }
 
