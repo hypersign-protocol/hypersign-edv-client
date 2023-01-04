@@ -83,7 +83,6 @@ export default class HypersignEdvClient {
   }
 
   public async getEdvConfig(edvId: string) {
-    console.log(edvId);
     throw new Error('Method not implemented');
   }
 
