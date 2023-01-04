@@ -49,18 +49,32 @@ var Utils = /** @class */ (function () {
     };
     Utils._makeAPICall = function (params) {
         return __awaiter(this, void 0, void 0, function () {
-            var resp, data;
+            var resp, data, e_1, response, data, status, statusText;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, (0, axios_1.default)(params.url, {
-                            method: params.method,
-                            data: params.body ? params.body : null,
-                            headers: params.headers ? params.headers : null,
-                        })];
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, (0, axios_1.default)(params.url, {
+                                method: params.method,
+                                data: params.body ? params.body : null,
+                                headers: params.headers ? params.headers : null,
+                            })];
                     case 1:
                         resp = _a.sent();
                         data = resp.data;
                         return [2 /*return*/, data];
+                    case 2:
+                        e_1 = _a.sent();
+                        response = e_1.response;
+                        data = response.data, status = response.status, statusText = response.statusText;
+                        if (data) {
+                            throw new Error(data);
+                        }
+                        else {
+                            throw new Error(statusText);
+                        }
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
                 }
             });
         });

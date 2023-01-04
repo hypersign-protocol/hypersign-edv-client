@@ -27,11 +27,21 @@ async function register(){
   console.log(data);
 
   const edvId: string = data.id;
-  console.log('New edvId is: ' + edvId);
+  console.log('New edvId is: ' + edvId)
   const m = { 'foo': 'bar' };
 
-  const res = await hsEDVClient.insertDoc({document: m, documentId: 'my-doc-1' ,edvId});
+  const res = await hsEDVClient.insertDoc({document: m, edvId});
   console.log(res)
+
+  m.foo = 'bar2'; //updating a doc 1st time
+  const { id } = res; 
+  const res2 = await hsEDVClient.updateDoc({document: m, documentId: id, edvId});
+  console.log(res2)
+
+  m.foo = 'bar3'; //updating a doc 2nd time with same sequence (default will be 0)
+  const res3 = await hsEDVClient.updateDoc({document: m, documentId: id, edvId});
+  console.log(res3)
+
 }
 
 

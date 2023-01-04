@@ -120,7 +120,51 @@ var HypersignEdvClient = /** @class */ (function () {
     HypersignEdvClient.prototype.insertDoc = function (_a) {
         var document = _a.document, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId;
         return __awaiter(this, void 0, void 0, function () {
-            var jwe, hsEncDoc, edvDocAddUrl, headers, signedHeader, resp;
+            var jwe, hsEncDoc, edvDocAddUrl, headers, method, signedHeader, resp;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.hsCipher.encryptObject({
+                            plainObject: document,
+                        })];
+                    case 1:
+                        jwe = _b.sent();
+                        hsEncDoc = new hsEncryptedDocument_1.default({ jwe: jwe, id: documentId, sequence: sequence });
+                        console.log(hsEncDoc);
+                        edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+                        headers = {
+                            // digest signature
+                            // authorization header,
+                            controller: this.keyAgreementKey.controller,
+                            vermethodid: this.keyAgreementKey.id,
+                            date: new Date().toUTCString(),
+                        };
+                        method = 'POST';
+                        return [4 /*yield*/, this.hsHttpSigner.signHTTP({
+                                url: edvDocAddUrl,
+                                method: method,
+                                headers: headers,
+                                encryptedObject: hsEncDoc.get(),
+                                capabilityAction: 'write',
+                            })];
+                    case 2:
+                        signedHeader = _b.sent();
+                        return [4 /*yield*/, utils_1.default._makeAPICall({
+                                url: edvDocAddUrl,
+                                method: method,
+                                body: hsEncDoc.get(),
+                                headers: signedHeader,
+                            })];
+                    case 3:
+                        resp = _b.sent();
+                        return [2 /*return*/, resp];
+                }
+            });
+        });
+    };
+    HypersignEdvClient.prototype.updateDoc = function (_a) {
+        var document = _a.document, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId;
+        return __awaiter(this, void 0, void 0, function () {
+            var jwe, hsEncDoc, edvDocAddUrl, headers, method, signedHeader, resp;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0: return [4 /*yield*/, this.hsCipher.encryptObject({
@@ -137,9 +181,10 @@ var HypersignEdvClient = /** @class */ (function () {
                             vermethodid: this.keyAgreementKey.id,
                             date: new Date().toUTCString(),
                         };
+                        method = 'PUT';
                         return [4 /*yield*/, this.hsHttpSigner.signHTTP({
                                 url: edvDocAddUrl,
-                                method: 'POST',
+                                method: method,
                                 headers: headers,
                                 encryptedObject: hsEncDoc.get(),
                                 capabilityAction: 'write',
@@ -148,7 +193,7 @@ var HypersignEdvClient = /** @class */ (function () {
                         signedHeader = _b.sent();
                         return [4 /*yield*/, utils_1.default._makeAPICall({
                                 url: edvDocAddUrl,
-                                method: 'POST',
+                                method: method,
                                 body: hsEncDoc.get(),
                                 headers: signedHeader,
                             })];
@@ -156,14 +201,6 @@ var HypersignEdvClient = /** @class */ (function () {
                         resp = _b.sent();
                         return [2 /*return*/, resp];
                 }
-            });
-        });
-    };
-    HypersignEdvClient.prototype.updateDoc = function (document, documentId, edvId) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                console.log({ document: document, documentId: documentId, edvId: edvId });
-                throw new Error('Method not implemented');
             });
         });
     };

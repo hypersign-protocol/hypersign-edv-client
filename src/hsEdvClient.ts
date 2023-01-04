@@ -118,9 +118,10 @@ export default class HypersignEdvClient {
       vermethodid: this.keyAgreementKey.id,
       date: new Date().toUTCString(),
     };
+    const method = 'POST';
     const signedHeader = await this.hsHttpSigner.signHTTP({
       url: edvDocAddUrl,
-      method: 'POST',
+      method,
       headers,
       encryptedObject: hsEncDoc.get(),
       capabilityAction: 'write',
@@ -129,7 +130,7 @@ export default class HypersignEdvClient {
     // make the call to store
     const resp = await Utils._makeAPICall({
       url: edvDocAddUrl,
-      method: 'POST',
+      method,
       body: hsEncDoc.get(),
       headers: signedHeader,
     });
@@ -137,9 +138,50 @@ export default class HypersignEdvClient {
     return resp;
   }
 
-  public async updateDoc(document: any, documentId: string, edvId: string) {
-    console.log({ document, documentId, edvId });
-    throw new Error('Method not implemented');
+  public async updateDoc({
+    document,
+    documentId,
+    sequence,
+    edvId,
+  }: {
+    document: any;
+    documentId?: string;
+    sequence?: number;
+    edvId: string;
+  }) {
+    // encrypt the document
+    const jwe = await this.hsCipher.encryptObject({
+      plainObject: document,
+    });
+    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
+
+    // form the http request header by signing the header
+    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
+    const headers = {
+      // digest signature
+      // authorization header,
+      controller: this.keyAgreementKey.controller,
+      vermethodid: this.keyAgreementKey.id,
+      date: new Date().toUTCString(),
+    };
+    const method = 'PUT';
+    const signedHeader = await this.hsHttpSigner.signHTTP({
+      url: edvDocAddUrl,
+      method,
+      headers,
+      encryptedObject: hsEncDoc.get(),
+      capabilityAction: 'write',
+    });
+
+    // make the call to store
+    const resp = await Utils._makeAPICall({
+      url: edvDocAddUrl,
+      method,
+      body: hsEncDoc.get(),
+      headers: signedHeader,
+    });
+
+    return resp;
   }
 
   public async fetchAllDocs() {
