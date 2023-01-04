@@ -34,6 +34,7 @@ export default class HypersignEdvClient {
    *
    */
   public async registerEdv(config: {
+    edvId?: string;
     invoker?: string;
     delegator?: string;
     referenceId?: string;
@@ -50,6 +51,11 @@ export default class HypersignEdvClient {
 
     if (!HmacKeyTypes[config.hmac.type]) {
       throw new Error('Unsupported hmac type: ' + config.hmac.type);
+    }
+
+    // Adding support for custom id
+    if (config.edvId) {
+      edvConfig.id = config.edvId;
     }
 
     edvConfig.keyAgreementKey = {
@@ -86,12 +92,22 @@ export default class HypersignEdvClient {
     throw new Error('Method not implemented');
   }
 
-  public async insertDoc(document: any, edvId: string) {
+  public async insertDoc({
+    document,
+    documentId,
+    sequence,
+    edvId,
+  }: {
+    document: any;
+    documentId?: string;
+    sequence?: number;
+    edvId: string;
+  }) {
     // encrypt the document
     const jwe = await this.hsCipher.encryptObject({
       plainObject: document,
     });
-    const hsEncDoc = new HypersignEncryptedDocument({ jwe });
+    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
 
     // form the http request header by signing the header
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';

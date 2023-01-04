@@ -20,14 +20,17 @@ async function register(){
       id: 'https://example.com/kms/67891',
       type: 'Sha256HmacKey2020',
     },
+    edvId: "my-edv-1" // Optional 
   };
+  
   const data  = await hsEDVClient.registerEdv(config);
   console.log(data);
 
-  const edvId = data.id;
+  const edvId: string = data.id;
   console.log('New edvId is: ' + edvId);
   const m = { 'foo': 'bar' };
-  const res = await hsEDVClient.insertDoc(m, edvId);
+
+  const res = await hsEDVClient.insertDoc({document: m, documentId: 'my-doc-1' ,edvId});
   console.log(res)
 }
 
