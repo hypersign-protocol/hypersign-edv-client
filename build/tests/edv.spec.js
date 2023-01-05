@@ -40,15 +40,15 @@ var index_1 = require("../index");
 var key_spec_1 = require("./key.spec");
 function createClient() {
     return __awaiter(this, void 0, void 0, function () {
-        var url, keyAgreementKey;
+        var url, ed25519Keypair;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     url = 'http://localhost:3001';
                     return [4 /*yield*/, (0, key_spec_1.Ed25519Keypair)(key_spec_1.authenticationKey)];
                 case 1:
-                    keyAgreementKey = _a.sent();
-                    return [2 /*return*/, new index_1.HypersignEdvClient({ keyResolver: key_spec_1.hypersignDIDKeyResolverForEd25519KeyPair, url: url, keyAgreementKey: keyAgreementKey })];
+                    ed25519Keypair = _a.sent();
+                    return [2 /*return*/, new index_1.HypersignEdvClient({ keyResolver: key_spec_1.hypersignDIDKeyResolverForEd25519KeyPair, url: url, ed25519VerificationKey2020: ed25519Keypair })];
             }
         });
     });

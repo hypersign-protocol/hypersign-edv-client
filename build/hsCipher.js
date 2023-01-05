@@ -1,4 +1,9 @@
 "use strict";
+/**
+ * Copyright (c) 2022, Hypermine Pvt. Ltd.
+ * All rights reserved.
+ * Author: Vishwas Anand Bhushan (Github @ vishwas1)
+ */
 var __assign = (this && this.__assign) || function () {
     __assign = Object.assign || function(t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {

@@ -1,6 +1,10 @@
-// import fetch from 'node-fetch';
+/**
+ * Copyright (c) 2022, Hypermine Pvt. Ltd.
+ * All rights reserved.
+ * Author: Vishwas Anand Bhushan (Github @ vishwas1)
+ */
+
 import axios from 'axios';
-import { httpClient, DEFAULT_HEADERS } from '@digitalbazaar/http-client';
 interface IRequest {
   url: string;
   method: string;

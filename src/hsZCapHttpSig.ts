@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2022, Hypermine Pvt. Ltd.
+ * All rights reserved.
+ * Author: Vishwas Anand Bhushan (Github @ vishwas1)
+ */
+
 import { signCapabilityInvocation } from '@digitalbazaar/http-signature-zcap-invoke';
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
 import { VerificationKeyTypes } from './hsEdvDataModels';

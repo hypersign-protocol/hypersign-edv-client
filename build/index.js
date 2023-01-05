@@ -1,4 +1,9 @@
 "use strict";
+/**
+ * Copyright (c) 2022, Hypermine Pvt. Ltd.
+ * All rights reserved.
+ * Author: Vishwas Anand Bhushan (Github @ vishwas1)
+ */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };

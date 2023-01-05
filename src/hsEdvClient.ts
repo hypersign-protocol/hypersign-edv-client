@@ -1,6 +1,7 @@
 /**
- * Copyright (c) Hypermine Pvt. Ltd.
- * 4 January, 2023
+ * Copyright (c) 2022, Hypermine Pvt. Ltd.
+ * All rights reserved.
+ * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
 
 import Config from './config';
@@ -16,22 +17,22 @@ export default class HypersignEdvClient {
   private keyResolver: Function;
   private hsCipher: HypersignCipher;
   private hsHttpSigner: HypersignZCapHttpSigner;
-  private keyAgreementKey: Ed25519VerificationKey2020;
+  private ed25519VerificationKey2020: Ed25519VerificationKey2020;
   constructor({
     keyResolver,
     url,
-    keyAgreementKey,
+    ed25519VerificationKey2020,
   }: {
     keyResolver: Function;
     url?: string;
-    keyAgreementKey: Ed25519VerificationKey2020;
+    ed25519VerificationKey2020: Ed25519VerificationKey2020;
   }) {
     // optional parameters
     this.edvsUrl = Utils._sanitizeURL(url || Config.Defaults.edvsBaseURl);
     this.keyResolver = keyResolver;
-    this.keyAgreementKey = keyAgreementKey;
-    this.hsCipher = new HypersignCipher({ keyResolver: this.keyResolver, keyAgreementKey: this.keyAgreementKey });
-    this.hsHttpSigner = new HypersignZCapHttpSigner({ keyAgreementKey: this.keyAgreementKey });
+    this.ed25519VerificationKey2020 = ed25519VerificationKey2020;
+    this.hsCipher = new HypersignCipher({ keyResolver: this.keyResolver, keyAgreementKey: this.ed25519VerificationKey2020 });
+    this.hsHttpSigner = new HypersignZCapHttpSigner({ keyAgreementKey: this.ed25519VerificationKey2020 });
   }
 
   /**
@@ -130,8 +131,8 @@ export default class HypersignEdvClient {
     const headers = {
       // digest signature
       // authorization header,
-      controller: this.keyAgreementKey.controller,
-      vermethodid: this.keyAgreementKey.id,
+      controller: this.ed25519VerificationKey2020.controller,
+      vermethodid: this.ed25519VerificationKey2020.id,
       date: new Date().toUTCString(),
     };
     const method = 'POST';
@@ -184,8 +185,8 @@ export default class HypersignEdvClient {
     const headers = {
       // digest signature
       // authorization header,
-      controller: this.keyAgreementKey.controller,
-      vermethodid: this.keyAgreementKey.id,
+      controller: this.ed25519VerificationKey2020.controller,
+      vermethodid: this.ed25519VerificationKey2020.id,
       date: new Date().toUTCString(),
     };
     const method = 'PUT';
@@ -230,8 +231,8 @@ export default class HypersignEdvClient {
     // const headers = {
     //   // digest signature
     //   // authorization header,
-    //   controller: this.keyAgreementKey.controller,
-    //   vermethodid: this.keyAgreementKey.id,
+    //   controller: this.ed25519VerificationKey2020.controller,
+    //   vermethodid: this.ed25519VerificationKey2020.id,
     //   date: new Date().toUTCString(),
     // };
     // const method = 'GET';

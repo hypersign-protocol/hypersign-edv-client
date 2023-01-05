@@ -1,7 +1,8 @@
 "use strict";
 /**
- * Copyright (c) Hypermine Pvt. Ltd.
- * 4 January, 2023
+ * Copyright (c) 2022, Hypermine Pvt. Ltd.
+ * All rights reserved.
+ * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -51,13 +52,13 @@ var hsCipher_1 = __importDefault(require("./hsCipher"));
 var hsZCapHttpSig_1 = __importDefault(require("./hsZCapHttpSig"));
 var HypersignEdvClient = /** @class */ (function () {
     function HypersignEdvClient(_a) {
-        var keyResolver = _a.keyResolver, url = _a.url, keyAgreementKey = _a.keyAgreementKey;
+        var keyResolver = _a.keyResolver, url = _a.url, ed25519VerificationKey2020 = _a.ed25519VerificationKey2020;
         // optional parameters
         this.edvsUrl = utils_1.default._sanitizeURL(url || config_1.default.Defaults.edvsBaseURl);
         this.keyResolver = keyResolver;
-        this.keyAgreementKey = keyAgreementKey;
-        this.hsCipher = new hsCipher_1.default({ keyResolver: this.keyResolver, keyAgreementKey: this.keyAgreementKey });
-        this.hsHttpSigner = new hsZCapHttpSig_1.default({ keyAgreementKey: this.keyAgreementKey });
+        this.ed25519VerificationKey2020 = ed25519VerificationKey2020;
+        this.hsCipher = new hsCipher_1.default({ keyResolver: this.keyResolver, keyAgreementKey: this.ed25519VerificationKey2020 });
+        this.hsHttpSigner = new hsZCapHttpSig_1.default({ keyAgreementKey: this.ed25519VerificationKey2020 });
     }
     /**
      * Creates a new data vault for given configuration
@@ -145,8 +146,8 @@ var HypersignEdvClient = /** @class */ (function () {
                         headers = {
                             // digest signature
                             // authorization header,
-                            controller: this.keyAgreementKey.controller,
-                            vermethodid: this.keyAgreementKey.id,
+                            controller: this.ed25519VerificationKey2020.controller,
+                            vermethodid: this.ed25519VerificationKey2020.id,
                             date: new Date().toUTCString(),
                         };
                         method = 'POST';
@@ -196,8 +197,8 @@ var HypersignEdvClient = /** @class */ (function () {
                         headers = {
                             // digest signature
                             // authorization header,
-                            controller: this.keyAgreementKey.controller,
-                            vermethodid: this.keyAgreementKey.id,
+                            controller: this.ed25519VerificationKey2020.controller,
+                            vermethodid: this.ed25519VerificationKey2020.id,
                             date: new Date().toUTCString(),
                         };
                         method = 'PUT';

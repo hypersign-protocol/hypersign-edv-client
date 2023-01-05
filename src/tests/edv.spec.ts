@@ -3,8 +3,8 @@ import { Ed25519Keypair, authenticationKey, hypersignDIDKeyResolverForEd25519Key
 
 async function createClient() {
   const url = 'http://localhost:3001';
-  const keyAgreementKey = await Ed25519Keypair(authenticationKey) 
-  return new HypersignEdvClient({keyResolver: hypersignDIDKeyResolverForEd25519KeyPair, url, keyAgreementKey: keyAgreementKey});
+  const ed25519Keypair = await Ed25519Keypair(authenticationKey) 
+  return new HypersignEdvClient({keyResolver: hypersignDIDKeyResolverForEd25519KeyPair, url, ed25519VerificationKey2020: ed25519Keypair});
 }
 
 async function register(){

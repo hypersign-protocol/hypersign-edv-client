@@ -1,6 +1,13 @@
+/**
+ * Copyright (c) 2022, Hypermine Pvt. Ltd.
+ * All rights reserved.
+ * Author: Vishwas Anand Bhushan (Github @ vishwas1)
+ */
+
 import { Cipher } from '@digitalbazaar/minimal-cipher';
 import { X25519KeyAgreementKey2020 } from '@digitalbazaar/x25519-key-agreement-key-2020';
 import { VerificationKeyTypes, KeyAgreementKeyTypes } from './hsEdvDataModels';
+
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
 
 interface IKeyAgreementKey {
