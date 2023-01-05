@@ -148,7 +148,7 @@ console.log(res2);
 ### Update Doc with new sequence
 
 ```js
-//updating a doc 3rd time with new sequence
+//updating a doc 2nd time with new sequence
 m.foo = 'bar34';
 const res4 = await hsEDVClient.updateDoc({ document: m, documentId: id, sequence: 1, edvId });
 console.log(res4);
@@ -157,7 +157,7 @@ console.log(res4);
 ### Fetch Doc
 
 ```js
-// Fetching a doc with doc id from edv:  it shoul return 2 docs
+// Fetching a doc with doc id from edv:  it should return 2 docs
 const res5 = await hsEDVClient.fetchDoc({ documentId: id, edvId });
 console.log(res5);
 ```
