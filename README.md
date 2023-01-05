@@ -1,6 +1,11 @@
 ## Intro
 
-The edv client converts `Ed25519VerificationKey2020` into `X25519KeyAgreementKey2020` key pair internally and use that for encryption and decryption. For signing, it uses `Ed25519VerificationKey2020` only. As a invoker/developer, they only need to worry about `Ed25519VerificationKey2020` pair. This package exposes three classes `HypersignEdvClient` (for interacting with the [edv service](https://github.com/hypersign-protocol/hypersign-edv-service)), `HypersignCipher` (for encryption and decryption), `HypersignZCapHttpSigner` (for signign http/https capabilities read/write)
+The edv client converts `Ed25519VerificationKey2020` into `X25519KeyAgreementKey2020` key pair internally and use that for encryption and decryption. For signing, it uses `Ed25519VerificationKey2020` only. As a invoker/developer, they only need to worry about `Ed25519VerificationKey2020` pair. 
+
+This package exposes three classes:
+- `HypersignEdvClient` - for interacting with the [edv service](https://github.com/hypersign-protocol/hypersign-edv-service)
+- `HypersignCipher` - for encryption and decryption
+- `HypersignZCapHttpSigner` - for signing http/https authorization capabilities read/write)
 
 ## Install
 
@@ -48,6 +53,8 @@ const authenticationKey = {
 
 const ed25519Keypair = await Ed25519VerificationKey2020.generate({ ...authenticationKey });
 ```
+Note: For time being since we are not using any Key Management System (KMS), we expect client to manage the authentication key  somewhere secure. 
+
 
 #### Prepare your keyresolver
 
@@ -70,7 +77,7 @@ const keyResolver = async ({ id }) => {
 };
 ```
 
-#### Initiate the EDV Client instance to interact with Hypersign edv
+#### Initiate the EDV Client instance to interact with Hypersign edv service
 
 ```js
 const hsEDVClient = new HypersignEdvClient({
@@ -97,6 +104,8 @@ const config = {
 };
 const data = await hsEDVClient.registerEdv(config);
 ```
+
+If the edvId already exists, then it will simply return the edv configuration without giving any error.
 
 ### Get an already registered edv
 
