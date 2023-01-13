@@ -2,7 +2,7 @@
   "name": "hypersign-edv-client",
   "version": "1.0.0",
   "description": "",
-  "main": "build/src/index.js",
+  "main": "build/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "npm run format && npm run lint && rimraf build/ && tsc",
