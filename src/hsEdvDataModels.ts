@@ -10,6 +10,8 @@ export enum KeyAgreementKeyTypes {
 
 export enum VerificationKeyTypes {
   Ed25519VerificationKey2020 = 'Ed25519VerificationKey2020',
+  EcdsaSecp256k1VerificationKey2019 = 'EcdsaSecp256k1VerificationKey2019',
+  EcdsaSecp256k1RecoveryMethod2020 = 'EcdsaSecp256k1RecoveryMethod2020',
 }
 
 export enum HmacKeyTypes {
@@ -19,6 +21,11 @@ export enum HmacKeyTypes {
 export interface IKeyAgreementKey {
   id: string;
   type: KeyAgreementKeyTypes;
+}
+
+export enum WalletTypes {
+  Metamask = 'metamask',
+  Keplr = 'keplr',
 }
 
 export interface IHmac {
@@ -35,4 +42,5 @@ export interface IDataVaultConfiguration {
   keyAgreementKey: IKeyAgreementKey; // required
   hmac: IHmac; // required
   id: string;
+  invokerVerificationMethodType?: VerificationKeyTypes;
 }
