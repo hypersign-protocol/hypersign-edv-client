@@ -53,7 +53,7 @@ var Utils = /** @class */ (function () {
     };
     Utils._makeAPICall = function (params) {
         return __awaiter(this, void 0, void 0, function () {
-            var resp, data, e_1, response, data, status, statusText;
+            var resp, data, e_1, response, data, status_1, statusText;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -70,7 +70,7 @@ var Utils = /** @class */ (function () {
                     case 2:
                         e_1 = _a.sent();
                         response = e_1.response;
-                        data = response.data, status = response.status, statusText = response.statusText;
+                        data = response.data, status_1 = response.status, statusText = response.statusText;
                         if (data) {
                             throw new Error(data);
                         }
