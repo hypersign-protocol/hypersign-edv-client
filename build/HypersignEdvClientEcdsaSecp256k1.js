@@ -381,7 +381,7 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
      * @returns updated document
      */
     HypersignEdvClientEcdsaSecp256k1.prototype.insertDoc = function (_a) {
-        var document = _a.document, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId;
+        var document = _a.document, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId, metadata = _a.metadata;
         return __awaiter(this, void 0, void 0, function () {
             var encryptedDocument, edvDocAddUrl, headers, hsEncDoc, body, _b, signature, canonicalHeaders, signedHeaders, payloadHash, base64, resp;
             return __generator(this, function (_c) {
@@ -399,7 +399,7 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
                             vermethoddid: this.verificationMethod.id,
                             algorithm: 'sha256-eth-personalSign',
                         };
-                        hsEncDoc = new hsEncryptedDocument_1.default({ data: encryptedDocument, id: documentId, sequence: sequence });
+                        hsEncDoc = new hsEncryptedDocument_1.default({ data: encryptedDocument, id: documentId, metadata: metadata, sequence: sequence });
                         body = hsEncDoc.get();
                         return [4 /*yield*/, this.signRequest({
                                 url: edvDocAddUrl,
@@ -435,7 +435,7 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
      * @returns newly created document
      */
     HypersignEdvClientEcdsaSecp256k1.prototype.updateDoc = function (_a) {
-        var document = _a.document, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId;
+        var document = _a.document, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId, metadata = _a.metadata;
         return __awaiter(this, void 0, void 0, function () {
             var encryptedDocument, edvDocAddUrl, headers, hsEncDoc, body, method, _b, signature, canonicalHeaders, signedHeaders, payloadHash, base64, resp;
             return __generator(this, function (_c) {
@@ -453,7 +453,7 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
                             vermethoddid: this.verificationMethod.id,
                             algorithm: 'sha256-eth-personalSign',
                         };
-                        hsEncDoc = new hsEncryptedDocument_1.default({ data: encryptedDocument, id: documentId, sequence: sequence });
+                        hsEncDoc = new hsEncryptedDocument_1.default({ data: encryptedDocument, metadata: metadata, id: documentId, sequence: sequence });
                         body = hsEncDoc.get();
                         method = 'PUT';
                         return [4 /*yield*/, this.signRequest({
@@ -524,6 +524,25 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
                     case 2:
                         decryptedMessage = _b.sent();
                         return [2 /*return*/, JSON.parse(decryptedMessage)];
+                }
+            });
+        });
+    };
+    HypersignEdvClientEcdsaSecp256k1.prototype.fetchAllDocs = function (_a) {
+        var edvId = _a.edvId, limit = _a.limit, page = _a.page;
+        return __awaiter(this, void 0, void 0, function () {
+            var edvDocAddUrl, resp;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+                        return [4 /*yield*/, utils_1.default._makeAPICall({
+                                url: edvDocAddUrl,
+                                method: 'GET',
+                            })];
+                    case 1:
+                        resp = _b.sent();
+                        return [2 /*return*/, resp];
                 }
             });
         });

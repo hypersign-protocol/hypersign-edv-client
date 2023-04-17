@@ -111,6 +111,7 @@ export default class HypersignEdvClient {
    */
   public async insertDoc({
     document,
+    metadata,
     documentId,
     sequence,
     edvId,
@@ -118,13 +119,14 @@ export default class HypersignEdvClient {
     document: any;
     documentId?: string;
     sequence?: number;
+    metadata?: any;
     edvId: string;
   }) {
     // encrypt the document
     const jwe = await this.hsCipher.encryptObject({
       plainObject: document,
     });
-    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
+    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, metadata, sequence });
 
     // form the http request header by signing the header
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
@@ -168,17 +170,19 @@ export default class HypersignEdvClient {
     documentId,
     sequence,
     edvId,
+    metadata,
   }: {
     document: any;
     documentId?: string;
     sequence?: number;
     edvId: string;
+    metadata?: any;
   }) {
     // encrypt the document
     const jwe = await this.hsCipher.encryptObject({
       plainObject: document,
     });
-    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
+    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, metadata, sequence });
 
     // form the http request header by signing the header
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
@@ -257,8 +261,14 @@ export default class HypersignEdvClient {
     throw new Error('Method not implemented');
   }
 
-  public async fetchAllDocs() {
-    throw new Error('Method not implemented');
+  public async fetchAllDocs({ edvId, limit, page }) {
+    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
+    const resp = await Utils._makeAPICall({
+      url: edvDocAddUrl,
+      method: 'GET',
+    });
+
+    return resp;
   }
 
   public async deleteDoc({ documentId }) {

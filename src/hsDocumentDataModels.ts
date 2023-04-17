@@ -9,5 +9,6 @@ export interface IEncryptedDoc {
   sequence?: number; // MUST be an unsigned 64-bit number.
   jwe?: object; // JSON Web Encryption object, if decoded results in IStructredDoc
   data?: object; // Encrypted Data
-  timestamp?: number;
+  timestamp?: number; // Timestamp of the document
+  metadata?: any; // Encrypted doc Metadata
 }

@@ -7,10 +7,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var HypersignEncryptedDocument = /** @class */ (function () {
     function HypersignEncryptedDocument(_a) {
-        var data = _a.data, jwe = _a.jwe, id = _a.id, sequence = _a.sequence;
+        var data = _a.data, metadata = _a.metadata, jwe = _a.jwe, id = _a.id, sequence = _a.sequence;
         this.encDoc = {
             jwe: jwe ? jwe : undefined,
             data: data ? data : undefined,
+            metadata: metadata ? metadata : undefined,
             id: id,
             sequence: sequence,
             timestamp: 0,

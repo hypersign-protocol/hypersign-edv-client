@@ -350,7 +350,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
    * @param sequence Optional sequence number, default is 0
    * @returns updated document
    */
-  public async insertDoc({ document, documentId, sequence, edvId }) {
+  public async insertDoc({ document, documentId, sequence, edvId, metadata }) {
     // encrypt the document
     const encryptedDocument = await this.encryptDocument({ document });
 
@@ -366,7 +366,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
       algorithm: 'sha256-eth-personalSign',
     };
 
-    const hsEncDoc = new HypersignEncryptedDocument({ data: encryptedDocument, id: documentId, sequence });
+    const hsEncDoc = new HypersignEncryptedDocument({ data: encryptedDocument, id: documentId, metadata, sequence });
 
     const body = hsEncDoc.get();
 
@@ -408,11 +408,13 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     documentId,
     sequence,
     edvId,
+    metadata,
   }: {
     document: any;
     documentId?: string;
     sequence?: number;
     edvId: string;
+    metadata?: any;
   }) {
     const encryptedDocument = await this.encryptDocument({ document });
 
@@ -428,7 +430,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
       algorithm: 'sha256-eth-personalSign',
     };
 
-    const hsEncDoc = new HypersignEncryptedDocument({ data: encryptedDocument, id: documentId, sequence });
+    const hsEncDoc = new HypersignEncryptedDocument({ data: encryptedDocument, metadata, id: documentId, sequence });
 
     const body = hsEncDoc.get();
     const method = 'PUT';
@@ -488,5 +490,15 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
       params: [encryptedMessage, accounts[0]],
     });
     return JSON.parse(decryptedMessage);
+  }
+
+  public async fetchAllDocs({ edvId, limit, page }) {
+    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
+    const resp = await Utils._makeAPICall({
+      url: edvDocAddUrl,
+      method: 'GET',
+    });
+
+    return resp;
   }
 }
