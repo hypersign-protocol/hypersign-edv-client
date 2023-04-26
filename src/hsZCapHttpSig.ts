@@ -37,7 +37,7 @@ export default class HypersignZCapHttpSigner {
     url: string;
     method: string;
     headers: object;
-    encryptedObject: object;
+    encryptedObject: object | undefined;
     capabilityAction: string;
   }) {
     const signedHeader = await signCapabilityInvocation({

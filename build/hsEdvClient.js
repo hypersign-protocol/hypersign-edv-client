@@ -73,7 +73,7 @@ var HypersignEdvClient = /** @class */ (function () {
      */
     HypersignEdvClient.prototype.registerEdv = function (config) {
         return __awaiter(this, void 0, void 0, function () {
-            var edvConfig, edvRegisterURl, resp;
+            var edvConfig, edvRegisterURl, method, headers, signedHeader, resp;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -108,12 +108,30 @@ var HypersignEdvClient = /** @class */ (function () {
                         if (config.delegator)
                             edvConfig.delegator = config.delegator;
                         edvRegisterURl = this.edvsUrl + config_1.default.APIs.edvAPI;
+                        method = 'POST';
+                        headers = {
+                            // digest signature
+                            // authorization header,
+                            controller: this.ed25519VerificationKey2020.controller,
+                            vermethodid: this.ed25519VerificationKey2020.id,
+                            date: new Date().toUTCString(),
+                        };
+                        return [4 /*yield*/, this.hsHttpSigner.signHTTP({
+                                url: edvRegisterURl,
+                                method: method,
+                                headers: headers,
+                                encryptedObject: edvConfig,
+                                capabilityAction: 'write',
+                            })];
+                    case 1:
+                        signedHeader = _a.sent();
                         return [4 /*yield*/, utils_1.default._makeAPICall({
                                 url: edvRegisterURl,
                                 method: 'POST',
                                 body: edvConfig,
+                                headers: signedHeader,
                             })];
-                    case 1:
+                    case 2:
                         resp = _a.sent();
                         // attaching the newly created edv id
                         edvConfig.id = resp.id;
@@ -234,16 +252,34 @@ var HypersignEdvClient = /** @class */ (function () {
     HypersignEdvClient.prototype.fetchDoc = function (_a) {
         var documentId = _a.documentId, edvId = _a.edvId, sequence = _a.sequence;
         return __awaiter(this, void 0, void 0, function () {
-            var edvDocAddUrl, resp;
+            var edvDocAddUrl, method, headers, signedHeader, resp;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
+                        method = 'GET';
+                        headers = {
+                            // digest signature
+                            // authorization header,
+                            controller: this.ed25519VerificationKey2020.controller,
+                            vermethodid: this.ed25519VerificationKey2020.id,
+                            date: new Date().toUTCString(),
+                        };
+                        return [4 /*yield*/, this.hsHttpSigner.signHTTP({
+                                url: edvDocAddUrl,
+                                method: method,
+                                headers: headers,
+                                encryptedObject: undefined,
+                                capabilityAction: 'read',
+                            })];
+                    case 1:
+                        signedHeader = _b.sent();
                         return [4 /*yield*/, utils_1.default._makeAPICall({
                                 url: edvDocAddUrl,
                                 method: 'GET',
+                                headers: signedHeader,
                             })];
-                    case 1:
+                    case 2:
                         resp = _b.sent();
                         return [2 /*return*/, resp];
                 }
@@ -260,16 +296,34 @@ var HypersignEdvClient = /** @class */ (function () {
     HypersignEdvClient.prototype.fetchAllDocs = function (_a) {
         var edvId = _a.edvId, limit = _a.limit, page = _a.page;
         return __awaiter(this, void 0, void 0, function () {
-            var edvDocAddUrl, resp;
+            var edvDocAddUrl, method, headers, signedHeader, resp;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+                        method = 'GET';
+                        headers = {
+                            // digest signature
+                            // authorization header,
+                            controller: this.ed25519VerificationKey2020.controller,
+                            vermethodid: this.ed25519VerificationKey2020.id,
+                            date: new Date().toUTCString(),
+                        };
+                        return [4 /*yield*/, this.hsHttpSigner.signHTTP({
+                                url: edvDocAddUrl,
+                                method: method,
+                                headers: headers,
+                                encryptedObject: undefined,
+                                capabilityAction: 'read',
+                            })];
+                    case 1:
+                        signedHeader = _b.sent();
                         return [4 /*yield*/, utils_1.default._makeAPICall({
                                 url: edvDocAddUrl,
                                 method: 'GET',
+                                headers: signedHeader,
                             })];
-                    case 1:
+                    case 2:
                         resp = _b.sent();
                         return [2 /*return*/, resp];
                 }
