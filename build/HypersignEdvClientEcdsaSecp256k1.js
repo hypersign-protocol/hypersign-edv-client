@@ -76,9 +76,9 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
      */
     HypersignEdvClientEcdsaSecp256k1.prototype.registerEdv = function (config) {
         return __awaiter(this, void 0, void 0, function () {
-            var edvConfig, edvRegisterURl, resp;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var edvConfig, edvRegisterURl, headers, _a, signature, canonicalHeaders, signedHeaders, payloadHash, base64, resp;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         this.verificationMethod = this.verificationMethod;
                         edvConfig = {};
@@ -101,13 +101,35 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
                             throw new Error('Verification method not supported');
                         }
                         edvRegisterURl = this.edvsUrl + config_1.default.APIs.edvAPI;
+                        headers = {
+                            created: Number(new Date()).toString(),
+                            'content-type': 'application/json',
+                            controller: this.verificationMethod.controller,
+                            vermethodid: this.verificationMethod.id,
+                            keyid: this.verificationMethod.id,
+                            vermethoddid: this.verificationMethod.id,
+                            algorithm: 'sha256-eth-personalSign',
+                        };
+                        return [4 /*yield*/, this.signRequest({
+                                url: edvRegisterURl,
+                                method: 'POST',
+                                query: null,
+                                keyId: this.verificationMethod.id,
+                                headers: headers,
+                                body: edvConfig,
+                            })];
+                    case 1:
+                        _a = _b.sent(), signature = _a.signature, canonicalHeaders = _a.canonicalHeaders, signedHeaders = _a.signedHeaders, payloadHash = _a.payloadHash;
+                        base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
+                        headers['Authorization'] = "Signature keyId=\"".concat(this.verificationMethod.id, "\",algorithm=\"sha256-eth-personalSign\",headers=\"").concat(signedHeaders, "\",signature=\"").concat(base64, "\"");
                         return [4 /*yield*/, utils_1.default._makeAPICall({
                                 url: edvRegisterURl,
                                 method: 'POST',
                                 body: edvConfig,
+                                headers: headers,
                             })];
-                    case 1:
-                        resp = _a.sent();
+                    case 2:
+                        resp = _b.sent();
                         // attaching the newly created edv id
                         edvConfig.id = resp.id;
                         return [2 /*return*/, edvConfig];
@@ -166,9 +188,8 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
                         if (method.toUpperCase() === 'POST' || method.toUpperCase() === 'PUT' || method.toUpperCase() === 'DELETE') {
                             action = 'write';
                         }
-                        if (typeof body == 'object') {
-                            body = this.canonicalizeJSON(body);
-                        }
+                        if (!(typeof body == 'object')) return [3 /*break*/, 4];
+                        body = this.canonicalizeJSON(body);
                         if (!(typeof window !== 'undefined' && window.crypto && window.crypto.subtle)) return [3 /*break*/, 2];
                         return [4 /*yield*/, window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(body || '')).then(function (hash) {
                                 var hashArray = Array.from(new Uint8Array(hash));
@@ -186,7 +207,11 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
                         payloadHash = payloadHash.toString('base64');
                         _c.label = 3;
                     case 3:
-                        headers['digest'] = "SHA-256=".concat(payloadHash);
+                        if (method.toUpperCase() !== 'GET') {
+                            headers['digest'] = "SHA-256=".concat(payloadHash);
+                        }
+                        _c.label = 4;
+                    case 4:
                         urlObj = new URL(url);
                         headers['host'] = urlObj.host;
                         query = urlObj.searchParams;
@@ -491,17 +516,40 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
     HypersignEdvClientEcdsaSecp256k1.prototype.fetchDoc = function (_a) {
         var documentId = _a.documentId, edvId = _a.edvId, sequence = _a.sequence;
         return __awaiter(this, void 0, void 0, function () {
-            var edvDocAddUrl, resp;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var edvDocAddUrl, headers, _b, signature, canonicalHeaders, signedHeaders, payloadHash, base64, resp;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
                         edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
+                        headers = {
+                            created: Number(new Date()).toString(),
+                            'content-type': 'application/json',
+                            controller: this.verificationMethod.controller,
+                            vermethodid: this.verificationMethod.id,
+                            keyid: this.verificationMethod.id,
+                            vermethoddid: this.verificationMethod.id,
+                            algorithm: 'sha256-eth-personalSign',
+                        };
+                        return [4 /*yield*/, this.signRequest({
+                                url: edvDocAddUrl,
+                                method: 'GET',
+                                query: null,
+                                keyId: this.verificationMethod.id,
+                                headers: headers,
+                                body: undefined,
+                            })];
+                    case 1:
+                        _b = _c.sent(), signature = _b.signature, canonicalHeaders = _b.canonicalHeaders, signedHeaders = _b.signedHeaders, payloadHash = _b.payloadHash;
+                        base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
+                        headers['Authorization'] = "Signature keyId=\"".concat(this.verificationMethod.id, "\",algorithm=\"sha256-eth-personalSign\",headers=\"").concat(signedHeaders, "\",signature=\"").concat(base64, "\"");
                         return [4 /*yield*/, utils_1.default._makeAPICall({
                                 url: edvDocAddUrl,
                                 method: 'GET',
+                                headers: headers,
+                                body: undefined,
                             })];
-                    case 1:
-                        resp = _b.sent();
+                    case 2:
+                        resp = _c.sent();
                         return [2 /*return*/, resp];
                 }
             });
@@ -531,17 +579,40 @@ var HypersignEdvClientEcdsaSecp256k1 = /** @class */ (function () {
     HypersignEdvClientEcdsaSecp256k1.prototype.fetchAllDocs = function (_a) {
         var edvId = _a.edvId, limit = _a.limit, page = _a.page;
         return __awaiter(this, void 0, void 0, function () {
-            var edvDocAddUrl, resp;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var edvDocAddUrl, headers, _b, signature, canonicalHeaders, signedHeaders, payloadHash, base64, resp;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
                         edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+                        headers = {
+                            created: Number(new Date()).toString(),
+                            'content-type': 'application/json',
+                            controller: this.verificationMethod.controller,
+                            vermethodid: this.verificationMethod.id,
+                            keyid: this.verificationMethod.id,
+                            vermethoddid: this.verificationMethod.id,
+                            algorithm: 'sha256-eth-personalSign',
+                        };
+                        return [4 /*yield*/, this.signRequest({
+                                url: edvDocAddUrl,
+                                method: 'GET',
+                                query: null,
+                                keyId: this.verificationMethod.id,
+                                headers: headers,
+                                body: undefined,
+                            })];
+                    case 1:
+                        _b = _c.sent(), signature = _b.signature, canonicalHeaders = _b.canonicalHeaders, signedHeaders = _b.signedHeaders, payloadHash = _b.payloadHash;
+                        base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
+                        headers['Authorization'] = "Signature keyId=\"".concat(this.verificationMethod.id, "\",algorithm=\"sha256-eth-personalSign\",headers=\"").concat(signedHeaders, "\",signature=\"").concat(base64, "\"");
                         return [4 /*yield*/, utils_1.default._makeAPICall({
                                 url: edvDocAddUrl,
                                 method: 'GET',
+                                headers: headers,
+                                body: undefined,
                             })];
-                    case 1:
-                        resp = _b.sent();
+                    case 2:
+                        resp = _c.sent();
                         return [2 /*return*/, resp];
                 }
             });

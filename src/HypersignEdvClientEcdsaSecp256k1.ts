@@ -76,10 +76,35 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     }
 
     const edvRegisterURl = this.edvsUrl + Config.APIs.edvAPI;
+
+    const headers = {
+      created: Number(new Date()).toString(),
+      'content-type': 'application/json',
+      controller: this.verificationMethod.controller,
+      vermethodid: this.verificationMethod.id,
+      keyid: this.verificationMethod.id,
+      vermethoddid: this.verificationMethod.id,
+      algorithm: 'sha256-eth-personalSign',
+    };
+
+    const { signature, canonicalHeaders, signedHeaders, payloadHash } = await this.signRequest({
+      url: edvRegisterURl,
+      method: 'POST',
+      query: null,
+      keyId: this.verificationMethod.id,
+      headers,
+      body: edvConfig,
+    });
+    const base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
+    headers[
+      'Authorization'
+    ] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
+
     const resp: IDataVaultConfiguration = await Utils._makeAPICall({
       url: edvRegisterURl,
       method: 'POST',
       body: edvConfig,
+      headers,
     });
 
     // attaching the newly created edv id
@@ -135,26 +160,27 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     if (method.toUpperCase() === 'POST' || method.toUpperCase() === 'PUT' || method.toUpperCase() === 'DELETE') {
       action = 'write';
     }
+    let payloadHash;
 
     if (typeof body == 'object') {
       body = this.canonicalizeJSON(body);
+      if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
+        payloadHash = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(body || '')).then((hash) => {
+          const hashArray = Array.from(new Uint8Array(hash));
+          const base64 = btoa(String.fromCharCode(...hashArray));
+          return base64;
+        });
+      } else {
+        payloadHash = crypto
+          .createHash('sha256')
+          .update(body || '')
+          .digest('base64');
+        payloadHash = payloadHash.toString('base64');
+      }
+      if (method.toUpperCase() !== 'GET') {
+        headers['digest'] = `SHA-256=${payloadHash}`;
+      }
     }
-
-    let payloadHash;
-    if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
-      payloadHash = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(body || '')).then((hash) => {
-        const hashArray = Array.from(new Uint8Array(hash));
-        const base64 = btoa(String.fromCharCode(...hashArray));
-        return base64;
-      });
-    } else {
-      payloadHash = crypto
-        .createHash('sha256')
-        .update(body || '')
-        .digest('base64');
-      payloadHash = payloadHash.toString('base64');
-    }
-    headers['digest'] = `SHA-256=${payloadHash}`;
 
     const urlObj = new URL(url);
     headers['host'] = urlObj.host;
@@ -471,9 +497,36 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
 
     // some auth should be here may  be capability check or something
+
+    const headers = {
+      created: Number(new Date()).toString(),
+      'content-type': 'application/json',
+      controller: this.verificationMethod.controller,
+      vermethodid: this.verificationMethod.id,
+      keyid: this.verificationMethod.id,
+      vermethoddid: this.verificationMethod.id,
+      algorithm: 'sha256-eth-personalSign',
+    };
+
+    const { signature, canonicalHeaders, signedHeaders, payloadHash } = await this.signRequest({
+      url: edvDocAddUrl,
+      method: 'GET',
+      query: null,
+      keyId: this.verificationMethod.id,
+      headers,
+      body: undefined,
+    });
+
+    const base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
+    headers[
+      'Authorization'
+    ] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
+
     const resp = await Utils._makeAPICall({
       url: edvDocAddUrl,
       method: 'GET',
+      headers,
+      body: undefined,
     });
 
     return resp;
@@ -494,9 +547,36 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
 
   public async fetchAllDocs({ edvId, limit, page }) {
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
+
+    const headers = {
+      created: Number(new Date()).toString(),
+      'content-type': 'application/json',
+      controller: this.verificationMethod.controller,
+      vermethodid: this.verificationMethod.id,
+      keyid: this.verificationMethod.id,
+      vermethoddid: this.verificationMethod.id,
+      algorithm: 'sha256-eth-personalSign',
+    };
+
+    const { signature, canonicalHeaders, signedHeaders, payloadHash } = await this.signRequest({
+      url: edvDocAddUrl,
+      method: 'GET',
+      query: null,
+      keyId: this.verificationMethod.id,
+      headers,
+      body: undefined,
+    });
+
+    const base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
+    headers[
+      'Authorization'
+    ] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
+
     const resp = await Utils._makeAPICall({
       url: edvDocAddUrl,
       method: 'GET',
+      headers,
+      body: undefined,
     });
 
     return resp;
