@@ -8,9 +8,11 @@ import { IEncryptedDoc } from './hsDocumentDataModels';
 export default class HypersignEncryptedDocument {
   encDoc: IEncryptedDoc;
 
-  constructor({ jwe, id, sequence }: { jwe: any; id?: string; sequence?: number }) {
+  constructor({ data, metadata, jwe, id, sequence }: { data?: any; metadata?: any; jwe?: any; id?: string; sequence?: number }) {
     this.encDoc = {
-      jwe: jwe,
+      jwe: jwe ? jwe : undefined,
+      data: data ? data : undefined,
+      metadata: metadata ? metadata : undefined,
       id,
       sequence,
       timestamp: 0,

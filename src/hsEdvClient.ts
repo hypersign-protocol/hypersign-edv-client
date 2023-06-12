@@ -90,10 +90,27 @@ export default class HypersignEdvClient {
 
     const edvRegisterURl = this.edvsUrl + Config.APIs.edvAPI;
 
+    const method = 'POST';
+    const headers = {
+      // digest signature
+      // authorization header,
+      controller: this.ed25519VerificationKey2020.controller,
+      vermethodid: this.ed25519VerificationKey2020.id,
+      date: new Date().toUTCString(),
+    };
+    const signedHeader = await this.hsHttpSigner.signHTTP({
+      url: edvRegisterURl,
+      method,
+      headers,
+      encryptedObject: edvConfig,
+      capabilityAction: 'write',
+    });
+
     const resp: IDataVaultConfiguration = await Utils._makeAPICall({
       url: edvRegisterURl,
       method: 'POST',
       body: edvConfig,
+      headers: signedHeader,
     });
 
     // attaching the newly created edv id
@@ -111,6 +128,7 @@ export default class HypersignEdvClient {
    */
   public async insertDoc({
     document,
+    metadata,
     documentId,
     sequence,
     edvId,
@@ -118,13 +136,14 @@ export default class HypersignEdvClient {
     document: any;
     documentId?: string;
     sequence?: number;
+    metadata?: any;
     edvId: string;
   }) {
     // encrypt the document
     const jwe = await this.hsCipher.encryptObject({
       plainObject: document,
     });
-    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
+    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, metadata, sequence });
 
     // form the http request header by signing the header
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
@@ -168,17 +187,19 @@ export default class HypersignEdvClient {
     documentId,
     sequence,
     edvId,
+    metadata,
   }: {
     document: any;
     documentId?: string;
     sequence?: number;
     edvId: string;
+    metadata?: any;
   }) {
     // encrypt the document
     const jwe = await this.hsCipher.encryptObject({
       plainObject: document,
     });
-    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
+    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, metadata, sequence });
 
     // form the http request header by signing the header
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
@@ -245,9 +266,27 @@ export default class HypersignEdvClient {
     // });
 
     // make the call to store
+
+    const method = 'GET';
+    const headers = {
+      // digest signature
+      // authorization header,
+      controller: this.ed25519VerificationKey2020.controller,
+      vermethodid: this.ed25519VerificationKey2020.id,
+      date: new Date().toUTCString(),
+    };
+    const signedHeader = await this.hsHttpSigner.signHTTP({
+      url: edvDocAddUrl,
+      method,
+      headers,
+      encryptedObject: undefined,
+      capabilityAction: 'read',
+    });
+
     const resp = await Utils._makeAPICall({
       url: edvDocAddUrl,
       method: 'GET',
+      headers: signedHeader,
     });
 
     return resp;
@@ -257,8 +296,30 @@ export default class HypersignEdvClient {
     throw new Error('Method not implemented');
   }
 
-  public async fetchAllDocs() {
-    throw new Error('Method not implemented');
+  public async fetchAllDocs({ edvId, limit, page }) {
+    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
+    const method = 'GET';
+    const headers = {
+      // digest signature
+      // authorization header,
+      controller: this.ed25519VerificationKey2020.controller,
+      vermethodid: this.ed25519VerificationKey2020.id,
+      date: new Date().toUTCString(),
+    };
+    const signedHeader = await this.hsHttpSigner.signHTTP({
+      url: edvDocAddUrl,
+      method,
+      headers,
+      encryptedObject: undefined,
+      capabilityAction: 'read',
+    });
+    const resp = await Utils._makeAPICall({
+      url: edvDocAddUrl,
+      method: 'GET',
+      headers: signedHeader,
+    });
+
+    return resp;
   }
 
   public async deleteDoc({ documentId }) {
