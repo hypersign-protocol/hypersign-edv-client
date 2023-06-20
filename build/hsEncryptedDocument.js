@@ -5,21 +5,20 @@
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var HypersignEncryptedDocument = /** @class */ (function () {
-    function HypersignEncryptedDocument(_a) {
-        var data = _a.data, metadata = _a.metadata, jwe = _a.jwe, id = _a.id, sequence = _a.sequence;
+class HypersignEncryptedDocument {
+    constructor({ data, indexd, metadata, jwe, id, sequence, }) {
         this.encDoc = {
             jwe: jwe ? jwe : undefined,
             data: data ? data : undefined,
             metadata: metadata ? metadata : undefined,
-            id: id,
-            sequence: sequence,
+            indexed: indexd ? indexd : undefined,
+            id,
+            sequence,
             timestamp: 0,
         };
     }
-    HypersignEncryptedDocument.prototype.get = function () {
+    get() {
         return this.encDoc;
-    };
-    return HypersignEncryptedDocument;
-}());
+    }
+}
 exports.default = HypersignEncryptedDocument;

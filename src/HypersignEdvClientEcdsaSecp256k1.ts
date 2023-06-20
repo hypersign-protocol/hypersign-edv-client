@@ -3,8 +3,10 @@
  * All rights reserved.
  * Author: Pratap Mridha (Github @pratap2018)
  */
-
+import multibase from 'multibase';
 import Config from './config';
+import nacl from 'tweetnacl';
+import naclUtil from 'tweetnacl-util';
 import Utils from './utils';
 import HypersignEncryptedDocument from './hsEncryptedDocument';
 import { IDataVaultConfiguration, VerificationKeyTypes } from './hsEdvDataModels';
@@ -26,13 +28,38 @@ interface IVerifcationMethod {
   blockchainAccountId: string;
 }
 
+interface KeyAgreementKeyPair {
+  id: string;
+  controller?: string;
+  type: 'X25519KeyAgreementKeyEIP5630';
+  publicKeyMultibase: string;
+}
+
 // edv client using metamask
+
+const multibaseBase58ToBase64 = (publicKeyMultibase: string | undefined) => {
+  if (publicKeyMultibase == undefined) {
+    return '';
+  }
+  const base64 = Buffer.from(multibase.decode(publicKeyMultibase)).toString('base64');
+  return base64;
+};
 
 export default class HypersignEdvClientEcdsaSecp256k1 {
   private edvsUrl: string;
   private verificationMethod: IVerifcationMethod;
+  private keyAgreement?: KeyAgreementKeyPair;
+  private encryptionPublicKeyBase64?: string;
 
-  constructor({ url, verificationMethod }: { url?: string; verificationMethod: IVerifcationMethod }) {
+  constructor({
+    url,
+    verificationMethod,
+    keyAgreement,
+  }: {
+    url?: string;
+    verificationMethod: IVerifcationMethod;
+    keyAgreement?: KeyAgreementKeyPair;
+  }) {
     this.edvsUrl = Utils._sanitizeURL(url || Config.Defaults.edvsBaseURl);
     if (
       verificationMethod.type !== 'EcdsaSecp256k1VerificationKey2019' &&
@@ -41,6 +68,13 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
       throw new Error('Verification method not supported');
     }
     this.verificationMethod = verificationMethod;
+    if (keyAgreement) {
+      this.keyAgreement = keyAgreement;
+      this.encryptionPublicKeyBase64 = multibaseBase58ToBase64(this.keyAgreement.publicKeyMultibase);
+    } else {
+      this.keyAgreement = undefined;
+      this.encryptionPublicKeyBase64 = undefined;
+    }
   }
 
   /**
@@ -327,7 +361,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     return signature;
   }
 
-  private async encryptDocument({ document }) {
+  private async encryptDocument({ document, recipients }: { document: object; recipients?: any }) {
     if (typeof document !== 'object') {
       throw new Error('Document is not an object');
     }
@@ -337,15 +371,19 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     if (!window.ethereum) {
       throw new Error('Metamask not installed');
     }
-
+    let encryptionPublicKey;
     // @ts-ignore
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-    // @ts-ignore
-    const encryptionPublicKey = await window.ethereum.request({
-      method: 'eth_getEncryptionPublicKey',
-      params: [accounts[0]], // you must have access to the specified account
-    });
+    // if (!recipients) {
+    //   // @ts-ignore
+    //   encryptionPublicKey = await window.ethereum.request({
+    //     method: 'eth_getEncryptionPublicKey',
+    //     params: [accounts[0]], // you must have access to the specified account
+    //   });
+    // } else {
+    //   encryptionPublicKey = this.encryptionPublicKeyBase64;
+    // }
 
     const cannonizeString = JSON.stringify(document, function (key, value) {
       if (value && typeof value === 'object') {
@@ -359,15 +397,72 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
       }
       return value;
     });
-    const encryptedMessage = sigUtil.encrypt({
-      publicKey: encryptionPublicKey,
-      data: cannonizeString,
-      version: 'x25519-xsalsa20-poly1305',
-    });
+
+    // const encryptedMessage = sigUtil.encrypt({
+    //   publicKey: encryptionPublicKey,
+    //   data: cannonizeString,
+    //   version: 'x25519-xsalsa20-poly1305',
+    // });
+
+    const encryptedMessage = this.encrypt(cannonizeString, recipients);
 
     return encryptedMessage;
   }
+  private generateRandomString(length) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?;:\'"()[]{}-+_=*/\\|@#$%&<>';
 
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      result += characters.charAt(randomIndex);
+    }
+
+    return result;
+  }
+  private encrypt(
+    msgParams,
+    recipients: Array<{
+      id: string;
+      type: string;
+      encryptionPublicKeyBase64: string;
+    }>,
+  ) {
+    const msgParamsUInt8Array = naclUtil.decodeUTF8(msgParams);
+
+    // const symmetricKey = nacl.randomBytes(nacl.secretbox.keyLength);
+    const symmetricKey = naclUtil.decodeUTF8(this.generateRandomString(32));
+
+    const encryptedSymmetricKeys = Array<{ encryptedSymmetricKey: string; keyId: any }>();
+    const ephemeralKeyPair = nacl.box.keyPair();
+    const recipientNonce = nacl.randomBytes(nacl.box.nonceLength);
+
+    recipients.forEach((recipient) => {
+      // Generate a random nonce for each recipient
+      // Encrypt the symmetric key with each recipient's public key
+      const publicKeyBase64 = naclUtil.decodeBase64(recipient.encryptionPublicKeyBase64);
+      const encryptedSymmetricKey = nacl.box(symmetricKey, recipientNonce, publicKeyBase64, ephemeralKeyPair.secretKey);
+      encryptedSymmetricKeys.push({ encryptedSymmetricKey: naclUtil.encodeBase64(encryptedSymmetricKey), keyId: recipient.id });
+
+      // Encrypt the message using the symmetric key
+    });
+
+    const encryptedMessage = nacl.secretbox(msgParamsUInt8Array, recipientNonce, symmetricKey);
+
+    const output = {
+      version: 'x25519-xsalsa20-poly1305',
+      nonce: naclUtil.encodeBase64(recipientNonce),
+      ephemPublicKey: naclUtil.encodeBase64(ephemeralKeyPair.publicKey),
+      recipients: encryptedSymmetricKeys.map((encryptedKey) => {
+        return {
+          encrypted_Key: encryptedKey.encryptedSymmetricKey,
+          keyId: encryptedKey.keyId,
+        };
+      }),
+      ciphertext: naclUtil.encodeBase64(encryptedMessage),
+    };
+
+    return output;
+  }
   /**
    * Inserts a new docs in the data vault
    * @param document doc to be updated in plain text
@@ -376,9 +471,41 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
    * @param sequence Optional sequence number, default is 0
    * @returns updated document
    */
-  public async insertDoc({ document, documentId, sequence, edvId, metadata }) {
+  public async insertDoc({ document, documentId, sequence, edvId, metadata, recipients }) {
+    if (recipients) {
+      if (!Array.isArray(recipients)) {
+        throw new Error('recipients must be an array');
+      }
+
+      if (recipients.length == 0) {
+        recipients = [];
+        recipients.push({
+          id: this.keyAgreement?.id,
+          type: this.keyAgreement?.type,
+        });
+      }
+
+      recipients.forEach((recipient) => {
+        if (!recipient.id) {
+          throw new Error('recipient must have id');
+        }
+        if (recipient.type !== 'X25519KeyAgreementKeyEIP5630') {
+          throw new Error('recipient must have type of X25519KeyAgreementKeyEIP5630');
+        }
+
+        recipient.encryptionPublicKeyBase64 = multibaseBase58ToBase64(recipient.id.split('#')[1]);
+      });
+    } else {
+      recipients = [];
+      recipients.push({
+        id: this.keyAgreement?.id,
+        type: this.keyAgreement?.type,
+        encryptionPublicKeyBase64: multibaseBase58ToBase64(this.keyAgreement?.id.split('#')[1]),
+      });
+    }
+
     // encrypt the document
-    const encryptedDocument = await this.encryptDocument({ document });
+    const encryptedDocument = await this.encryptDocument({ document, recipients });
 
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
 
@@ -532,17 +659,80 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     return resp;
   }
 
-  public async decryptDocument({ encryptedDocument }) {
+  public async decryptDocument({
+    encryptedDocument,
+    recipient,
+  }: {
+    encryptedDocument: any;
+    recipient: {
+      id: string;
+      type?: string;
+    };
+  }) {
     // @ts-ignore
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    const encryptedMessage = ethUtil.bufferToHex(Buffer.from(JSON.stringify(encryptedDocument)));
+    // const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    // const encryptedMessage = ethUtil.bufferToHex(Buffer.from(JSON.stringify(encryptedDocument)));
 
     // @ts-ignore
+    // const decryptedMessage = await window.ethereum.request({
+    //   method: 'eth_decrypt',
+    //   params: [encryptedMessage, accounts[0]],
+
+    // })
+    const decryptedMessage = await this.decrypt(encryptedDocument, recipient.id);
+    return JSON.parse(decryptedMessage);
+  }
+
+  // private naclDecodeHex(msgHex) {
+  //   const msgBase64 = Buffer.from(msgHex, 'hex').toString('base64');
+  //   return naclUtil.decodeBase64(msgBase64);
+  // }
+  private async decrypt(encryptedMessage, keyId) {
+    const encrypted_Key = encryptedMessage.recipients.find((recipient) => recipient.keyId === keyId).encrypted_Key;
+    const symmetricKey_Encrypted = {
+      version: encryptedMessage.version,
+      nonce: encryptedMessage.nonce,
+      ephemPublicKey: encryptedMessage.ephemPublicKey,
+      ciphertext: encrypted_Key,
+    };
+
+    // const nonce = naclUtil.decodeBase64(symmetricKey_Encrypted.nonce);
+    // const ciphertext = naclUtil.decodeBase64(symmetricKey_Encrypted.ciphertext);
+    // const ephemPublicKey = naclUtil.decodeBase64(symmetricKey_Encrypted.ephemPublicKey);
+
+    // trick to get the symmetric key
+
+    const encryptedMessageKey = {
+      version: encryptedMessage.version,
+      ciphertext: symmetricKey_Encrypted.ciphertext,
+      nonce: symmetricKey_Encrypted.nonce,
+      ephemPublicKey: symmetricKey_Encrypted.ephemPublicKey,
+    };
+
+    const buffredEncryptedMessage = ethUtil.bufferToHex(Buffer.from(JSON.stringify(encryptedMessageKey)));
+
+    // @ts-ignore
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    //@ts-ignore
     const decryptedMessage = await window.ethereum.request({
       method: 'eth_decrypt',
-      params: [encryptedMessage, accounts[0]],
+      params: [buffredEncryptedMessage, accounts[0]],
     });
-    return JSON.parse(decryptedMessage);
+
+    const symmetricKey = naclUtil.decodeUTF8(decryptedMessage);
+
+    const finalMessage = nacl.secretbox.open(
+      naclUtil.decodeBase64(encryptedMessage.ciphertext),
+      naclUtil.decodeBase64(encryptedMessage.nonce),
+      symmetricKey,
+    );
+    //   console.log(finalMessage);
+    if (finalMessage == null) {
+      throw Error('Decryption failed');
+    } else {
+      return naclUtil.encodeUTF8(finalMessage);
+    }
+    //   const output = naclUtil.encodeUTF8(decryptedMessage);
   }
 
   public async fetchAllDocs({ edvId, limit, page }) {

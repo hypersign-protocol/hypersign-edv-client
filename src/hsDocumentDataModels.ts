@@ -11,4 +11,5 @@ export interface IEncryptedDoc {
   data?: object; // Encrypted Data
   timestamp?: number; // Timestamp of the document
   metadata?: any; // Encrypted doc Metadata
+  indexed?: Array<any>; // Encrypted doc Indexes
 }

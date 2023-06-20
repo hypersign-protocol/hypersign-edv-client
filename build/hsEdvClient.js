@@ -13,52 +13,37 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (g && (g = 0, op[0] && (_ = 0)), _) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var config_1 = __importDefault(require("./config"));
-var utils_1 = __importDefault(require("./utils"));
-var hsEncryptedDocument_1 = __importDefault(require("./hsEncryptedDocument"));
-var hsEdvDataModels_1 = require("./hsEdvDataModels");
-var hsCipher_1 = __importDefault(require("./hsCipher"));
-var hsZCapHttpSig_1 = __importDefault(require("./hsZCapHttpSig"));
-var HypersignEdvClient = /** @class */ (function () {
-    function HypersignEdvClient(_a) {
-        var keyResolver = _a.keyResolver, url = _a.url, ed25519VerificationKey2020 = _a.ed25519VerificationKey2020;
+exports.HypersignEdvClientEd25519VerificationKey2020 = void 0;
+const config_1 = __importDefault(require("./config"));
+const utils_1 = __importDefault(require("./utils"));
+const hsEncryptedDocument_1 = __importDefault(require("./hsEncryptedDocument"));
+const hsEdvDataModels_1 = require("./hsEdvDataModels");
+const hsCipher_1 = __importDefault(require("./hsCipher"));
+const hsZCapHttpSig_1 = __importDefault(require("./hsZCapHttpSig"));
+const HypersignEdvClientEcdsaSecp256k1_1 = __importDefault(require("./HypersignEdvClientEcdsaSecp256k1"));
+const Hmac_1 = __importDefault(require("./Hmac"));
+const IndexHelper_1 = require("./IndexHelper");
+class HypersignEdvClientEd25519VerificationKey2020 {
+    constructor({ keyResolver, url, ed25519VerificationKey2020, x25519KeyAgreementKey2020, shaHmacKey2020, }) {
         // optional parameters
         this.edvsUrl = utils_1.default._sanitizeURL(url || config_1.default.Defaults.edvsBaseURl);
         this.keyResolver = keyResolver;
         this.ed25519VerificationKey2020 = ed25519VerificationKey2020;
-        this.hsCipher = new hsCipher_1.default({ keyResolver: this.keyResolver, keyAgreementKey: this.ed25519VerificationKey2020 });
-        this.hsHttpSigner = new hsZCapHttpSig_1.default({ keyAgreementKey: this.ed25519VerificationKey2020 });
+        this.x25519KeyAgreementKey2020 = x25519KeyAgreementKey2020;
+        this.hsCipher = new hsCipher_1.default({ keyResolver: this.keyResolver, keyAgreementKey: x25519KeyAgreementKey2020 });
+        this.shaHmacKey2020 = shaHmacKey2020
+            ? shaHmacKey2020
+            : {
+                id: ed25519VerificationKey2020.id,
+                type: hsEdvDataModels_1.HmacKeyTypes.Sha256HmacKey2020,
+                key: ed25519VerificationKey2020.privateKeyMultibase,
+            };
+        // always ed25519VerificationKey2020
+        this.hsHttpSigner = new hsZCapHttpSig_1.default({ capabilityInvocationKey: this.ed25519VerificationKey2020 });
     }
     /**
      * Creates a new data vault for given configuration
@@ -71,75 +56,77 @@ var HypersignEdvClient = /** @class */ (function () {
      * @param hmac hmac
      * @returns newly created data vault configuration
      */
-    HypersignEdvClient.prototype.registerEdv = function (config) {
-        return __awaiter(this, void 0, void 0, function () {
-            var edvConfig, edvRegisterURl, method, headers, signedHeader, resp;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        edvConfig = {};
-                        edvConfig.controller = config.controller;
-                        if (!hsEdvDataModels_1.KeyAgreementKeyTypes[config.keyAgreementKey.type]) {
-                            throw new Error('Unsupported keyagreement type: ' + config.keyAgreementKey.type);
-                        }
-                        if (!hsEdvDataModels_1.HmacKeyTypes[config.hmac.type]) {
-                            throw new Error('Unsupported hmac type: ' + config.hmac.type);
-                        }
-                        // Adding support for custom id
-                        if (config.edvId) {
-                            edvConfig.id = config.edvId;
-                        }
-                        edvConfig.keyAgreementKey = {
-                            id: config.keyAgreementKey.id,
-                            type: hsEdvDataModels_1.KeyAgreementKeyTypes[config.keyAgreementKey.type],
-                        };
-                        edvConfig.hmac = {
-                            id: config.hmac.id,
-                            type: hsEdvDataModels_1.HmacKeyTypes[config.hmac.type],
-                        };
-                        edvConfig.sequence = 0; // default values
-                        edvConfig.referenceId = 'primary'; // default values
-                        edvConfig.invoker = config.controller; // default values
-                        edvConfig.delegator = config.controller; // default values
-                        if (config.invoker)
-                            edvConfig.invoker = config.invoker;
-                        if (config.referenceId)
-                            edvConfig.referenceId = config.referenceId;
-                        if (config.delegator)
-                            edvConfig.delegator = config.delegator;
-                        edvRegisterURl = this.edvsUrl + config_1.default.APIs.edvAPI;
-                        method = 'POST';
-                        headers = {
-                            // digest signature
-                            // authorization header,
-                            controller: this.ed25519VerificationKey2020.controller,
-                            vermethodid: this.ed25519VerificationKey2020.id,
-                            date: new Date().toUTCString(),
-                        };
-                        return [4 /*yield*/, this.hsHttpSigner.signHTTP({
-                                url: edvRegisterURl,
-                                method: method,
-                                headers: headers,
-                                encryptedObject: edvConfig,
-                                capabilityAction: 'write',
-                            })];
-                    case 1:
-                        signedHeader = _a.sent();
-                        return [4 /*yield*/, utils_1.default._makeAPICall({
-                                url: edvRegisterURl,
-                                method: 'POST',
-                                body: edvConfig,
-                                headers: signedHeader,
-                            })];
-                    case 2:
-                        resp = _a.sent();
-                        // attaching the newly created edv id
-                        edvConfig.id = resp.id;
-                        return [2 /*return*/, edvConfig];
-                }
+    registerEdv(config) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const edvConfig = {};
+            edvConfig.controller = config.controller;
+            if (config.keyAgreementKey && !hsEdvDataModels_1.KeyAgreementKeyTypes[config.keyAgreementKey.type]) {
+                throw new Error('Unsupported keyagreement type: ' + config.keyAgreementKey.type);
+            }
+            if (config.hmac && !hsEdvDataModels_1.HmacKeyTypes[config.hmac.type]) {
+                throw new Error('Unsupported hmac type: ' + config.hmac.type);
+            }
+            // Adding support for custom id
+            if (config.edvId) {
+                edvConfig.id = config.edvId;
+            }
+            if (config.keyAgreementKey && config.hmac) {
+                edvConfig.keyAgreementKey = {
+                    id: config.keyAgreementKey.id,
+                    type: hsEdvDataModels_1.KeyAgreementKeyTypes[config.keyAgreementKey.type],
+                };
+                edvConfig.hmac = {
+                    id: config.hmac.id,
+                    type: hsEdvDataModels_1.HmacKeyTypes[config.hmac.type],
+                };
+            }
+            else {
+                edvConfig.keyAgreementKey = {
+                    id: this.x25519KeyAgreementKey2020.id,
+                    type: hsEdvDataModels_1.KeyAgreementKeyTypes[this.x25519KeyAgreementKey2020.type],
+                };
+                edvConfig.hmac = {
+                    id: this.shaHmacKey2020.id,
+                    type: hsEdvDataModels_1.HmacKeyTypes[this.shaHmacKey2020.type],
+                };
+            }
+            edvConfig.sequence = 0; // default values
+            edvConfig.referenceId = 'primary'; // default values
+            edvConfig.invoker = config.controller; // default values
+            edvConfig.delegator = config.controller; // default values
+            if (config.invoker)
+                edvConfig.invoker = config.invoker;
+            if (config.referenceId)
+                edvConfig.referenceId = config.referenceId;
+            if (config.delegator)
+                edvConfig.delegator = config.delegator;
+            const edvRegisterURl = this.edvsUrl + config_1.default.APIs.edvAPI;
+            const method = 'POST';
+            const headers = {
+                // digest signature
+                // authorization header,
+                controller: this.ed25519VerificationKey2020.controller,
+                vermethodid: this.ed25519VerificationKey2020.id,
+                date: new Date().toUTCString(),
+            };
+            const signedHeader = yield this.hsHttpSigner.signHTTP({
+                url: edvRegisterURl,
+                method,
+                headers,
+                encryptedObject: edvConfig,
+                capabilityAction: 'write',
             });
+            const resp = yield utils_1.default._makeAPICall({
+                url: edvRegisterURl,
+                method: 'POST',
+                body: edvConfig,
+                headers: signedHeader,
+            });
+            // attaching the newly created edv id
+            edvConfig.id = resp.id;
+            return edvConfig;
         });
-    };
+    }
     /**
      * Inserts a new docs in the data vault
      * @param document doc to be updated in plain text
@@ -148,49 +135,57 @@ var HypersignEdvClient = /** @class */ (function () {
      * @param sequence Optional sequence number, default is 0
      * @returns updated document
      */
-    HypersignEdvClient.prototype.insertDoc = function (_a) {
-        var document = _a.document, metadata = _a.metadata, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId;
-        return __awaiter(this, void 0, void 0, function () {
-            var jwe, hsEncDoc, edvDocAddUrl, headers, method, signedHeader, resp;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, this.hsCipher.encryptObject({
-                            plainObject: document,
-                        })];
-                    case 1:
-                        jwe = _b.sent();
-                        hsEncDoc = new hsEncryptedDocument_1.default({ jwe: jwe, id: documentId, metadata: metadata, sequence: sequence });
-                        edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
-                        headers = {
-                            // digest signature
-                            // authorization header,
-                            controller: this.ed25519VerificationKey2020.controller,
-                            vermethodid: this.ed25519VerificationKey2020.id,
-                            date: new Date().toUTCString(),
-                        };
-                        method = 'POST';
-                        return [4 /*yield*/, this.hsHttpSigner.signHTTP({
-                                url: edvDocAddUrl,
-                                method: method,
-                                headers: headers,
-                                encryptedObject: hsEncDoc.get(),
-                                capabilityAction: 'write',
-                            })];
-                    case 2:
-                        signedHeader = _b.sent();
-                        return [4 /*yield*/, utils_1.default._makeAPICall({
-                                url: edvDocAddUrl,
-                                method: method,
-                                body: hsEncDoc.get(),
-                                headers: signedHeader,
-                            })];
-                    case 3:
-                        resp = _b.sent();
-                        return [2 /*return*/, resp];
-                }
+    insertDoc({ document, metadata, documentId, sequence, edvId, recipients, indexs, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // encrypt the document
+            let finalIndex;
+            if (indexs) {
+                const hmac = yield Hmac_1.default.create({
+                    key: this.shaHmacKey2020.key,
+                    id: this.shaHmacKey2020.id,
+                });
+                const indexDoc = new IndexHelper_1.IndexHelper();
+                indexs.forEach((attr) => __awaiter(this, void 0, void 0, function* () {
+                    indexDoc.ensureIndex({
+                        attribute: attr.index,
+                        unique: attr.unique,
+                        hmac,
+                    });
+                }));
+                finalIndex = yield indexDoc.createEntry({ doc: document, hmac });
+            }
+            const jwe = yield this.hsCipher.encryptObject({
+                plainObject: document,
+                recipients,
             });
+            const hsEncDoc = new hsEncryptedDocument_1.default({ jwe, indexd: [finalIndex], id: documentId, metadata, sequence });
+            // form the http request header by signing the header
+            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+            const headers = {
+                // digest signature
+                // authorization header,
+                controller: this.ed25519VerificationKey2020.controller,
+                vermethodid: this.ed25519VerificationKey2020.id,
+                date: new Date().toUTCString(),
+            };
+            const method = 'POST';
+            const signedHeader = yield this.hsHttpSigner.signHTTP({
+                url: edvDocAddUrl,
+                method,
+                headers,
+                encryptedObject: hsEncDoc.get(),
+                capabilityAction: 'write',
+            });
+            // make the call to store
+            const resp = yield utils_1.default._makeAPICall({
+                url: edvDocAddUrl,
+                method,
+                body: hsEncDoc.get(),
+                headers: signedHeader,
+            });
+            return resp;
         });
-    };
+    }
     /**
      * Updates doc in the data vault
      * @param document doc to be updated in plain text
@@ -199,49 +194,40 @@ var HypersignEdvClient = /** @class */ (function () {
      * @param sequence Optional sequence number, default is 0
      * @returns newly created document
      */
-    HypersignEdvClient.prototype.updateDoc = function (_a) {
-        var document = _a.document, documentId = _a.documentId, sequence = _a.sequence, edvId = _a.edvId, metadata = _a.metadata;
-        return __awaiter(this, void 0, void 0, function () {
-            var jwe, hsEncDoc, edvDocAddUrl, headers, method, signedHeader, resp;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, this.hsCipher.encryptObject({
-                            plainObject: document,
-                        })];
-                    case 1:
-                        jwe = _b.sent();
-                        hsEncDoc = new hsEncryptedDocument_1.default({ jwe: jwe, id: documentId, metadata: metadata, sequence: sequence });
-                        edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
-                        headers = {
-                            // digest signature
-                            // authorization header,
-                            controller: this.ed25519VerificationKey2020.controller,
-                            vermethodid: this.ed25519VerificationKey2020.id,
-                            date: new Date().toUTCString(),
-                        };
-                        method = 'PUT';
-                        return [4 /*yield*/, this.hsHttpSigner.signHTTP({
-                                url: edvDocAddUrl,
-                                method: method,
-                                headers: headers,
-                                encryptedObject: hsEncDoc.get(),
-                                capabilityAction: 'write',
-                            })];
-                    case 2:
-                        signedHeader = _b.sent();
-                        return [4 /*yield*/, utils_1.default._makeAPICall({
-                                url: edvDocAddUrl,
-                                method: method,
-                                body: hsEncDoc.get(),
-                                headers: signedHeader,
-                            })];
-                    case 3:
-                        resp = _b.sent();
-                        return [2 /*return*/, resp];
-                }
+    updateDoc({ document, documentId, sequence, edvId, metadata, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // encrypt the document
+            const jwe = yield this.hsCipher.encryptObject({
+                plainObject: document,
             });
+            const hsEncDoc = new hsEncryptedDocument_1.default({ jwe, id: documentId, metadata, sequence });
+            // form the http request header by signing the header
+            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+            const headers = {
+                // digest signature
+                // authorization header,
+                controller: this.ed25519VerificationKey2020.controller,
+                vermethodid: this.ed25519VerificationKey2020.id,
+                date: new Date().toUTCString(),
+            };
+            const method = 'PUT';
+            const signedHeader = yield this.hsHttpSigner.signHTTP({
+                url: edvDocAddUrl,
+                method,
+                headers,
+                encryptedObject: hsEncDoc.get(),
+                capabilityAction: 'write',
+            });
+            // make the call to store
+            const resp = yield utils_1.default._makeAPICall({
+                url: edvDocAddUrl,
+                method,
+                body: hsEncDoc.get(),
+                headers: signedHeader,
+            });
+            return resp;
         });
-    };
+    }
     /**
      * Fetchs docs related to a particular documentId
      * @param documentId Id of the document
@@ -249,96 +235,154 @@ var HypersignEdvClient = /** @class */ (function () {
      * @param sequence Optional sequence number, default is 0
      * @returns all documents (with sequences if not passed) for a documentId
      */
-    HypersignEdvClient.prototype.fetchDoc = function (_a) {
-        var documentId = _a.documentId, edvId = _a.edvId, sequence = _a.sequence;
-        return __awaiter(this, void 0, void 0, function () {
-            var edvDocAddUrl, method, headers, signedHeader, resp;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
-                        method = 'GET';
-                        headers = {
-                            // digest signature
-                            // authorization header,
-                            controller: this.ed25519VerificationKey2020.controller,
-                            vermethodid: this.ed25519VerificationKey2020.id,
-                            date: new Date().toUTCString(),
-                        };
-                        return [4 /*yield*/, this.hsHttpSigner.signHTTP({
-                                url: edvDocAddUrl,
-                                method: method,
-                                headers: headers,
-                                encryptedObject: undefined,
-                                capabilityAction: 'read',
-                            })];
-                    case 1:
-                        signedHeader = _b.sent();
-                        return [4 /*yield*/, utils_1.default._makeAPICall({
-                                url: edvDocAddUrl,
-                                method: 'GET',
-                                headers: signedHeader,
-                            })];
-                    case 2:
-                        resp = _b.sent();
-                        return [2 /*return*/, resp];
-                }
+    fetchDoc({ documentId, edvId, sequence }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
+            //// TODO:  need to figure out how will it work in read capability
+            /// CAUTION:::  for time being, I have skipped signature verification wicich is security vulnerabilities
+            // // encrypt the document
+            // const jwe = await this.hsCipher.encryptObject({
+            //   plainObject: { foo: 'bar' },
+            // });
+            // const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
+            // const headers = {
+            //   // digest signature
+            //   // authorization header,
+            //   controller: this.ed25519VerificationKey2020.controller,
+            //   vermethodid: this.ed25519VerificationKey2020.id,
+            //   date: new Date().toUTCString(),
+            // };
+            // const method = 'GET';
+            // const signedHeader = await this.hsHttpSigner.signHTTP({
+            //   url: edvDocAddUrl,
+            //   method,
+            //   headers,
+            //   encryptedObject: hsEncDoc.get(), // TODO: not sure why its not working with empty object. for GET request what data does it expect??
+            //   capabilityAction: 'read',
+            // });
+            // make the call to store
+            const method = 'GET';
+            const headers = {
+                // digest signature
+                // authorization header,
+                controller: this.ed25519VerificationKey2020.controller,
+                vermethodid: this.ed25519VerificationKey2020.id,
+                date: new Date().toUTCString(),
+            };
+            const signedHeader = yield this.hsHttpSigner.signHTTP({
+                url: edvDocAddUrl,
+                method,
+                headers,
+                encryptedObject: undefined,
+                capabilityAction: 'read',
             });
-        });
-    };
-    HypersignEdvClient.prototype.getEdvConfig = function (edvId) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                throw new Error('Method not implemented');
+            const resp = yield utils_1.default._makeAPICall({
+                url: edvDocAddUrl,
+                method: 'GET',
+                headers: signedHeader,
             });
+            return resp;
         });
-    };
-    HypersignEdvClient.prototype.fetchAllDocs = function (_a) {
-        var edvId = _a.edvId, limit = _a.limit, page = _a.page;
-        return __awaiter(this, void 0, void 0, function () {
-            var edvDocAddUrl, method, headers, signedHeader, resp;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
-                        method = 'GET';
-                        headers = {
-                            // digest signature
-                            // authorization header,
-                            controller: this.ed25519VerificationKey2020.controller,
-                            vermethodid: this.ed25519VerificationKey2020.id,
-                            date: new Date().toUTCString(),
-                        };
-                        return [4 /*yield*/, this.hsHttpSigner.signHTTP({
-                                url: edvDocAddUrl,
-                                method: method,
-                                headers: headers,
-                                encryptedObject: undefined,
-                                capabilityAction: 'read',
-                            })];
-                    case 1:
-                        signedHeader = _b.sent();
-                        return [4 /*yield*/, utils_1.default._makeAPICall({
-                                url: edvDocAddUrl,
-                                method: 'GET',
-                                headers: signedHeader,
-                            })];
-                    case 2:
-                        resp = _b.sent();
-                        return [2 /*return*/, resp];
-                }
+    }
+    getEdvConfig(edvId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error('Method not implemented');
+        });
+    }
+    fetchAllDocs({ edvId, limit, page }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+            const method = 'GET';
+            const headers = {
+                // digest signature
+                // authorization header,
+                controller: this.ed25519VerificationKey2020.controller,
+                vermethodid: this.ed25519VerificationKey2020.id,
+                date: new Date().toUTCString(),
+            };
+            const signedHeader = yield this.hsHttpSigner.signHTTP({
+                url: edvDocAddUrl,
+                method,
+                headers,
+                encryptedObject: undefined,
+                capabilityAction: 'read',
             });
-        });
-    };
-    HypersignEdvClient.prototype.deleteDoc = function (_a) {
-        var documentId = _a.documentId;
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_b) {
-                console.log({ documentId: documentId });
-                throw new Error('Method not implemented');
+            const resp = yield utils_1.default._makeAPICall({
+                url: edvDocAddUrl,
+                method: 'GET',
+                headers: signedHeader,
             });
+            return resp;
         });
-    };
-    return HypersignEdvClient;
-}());
+    }
+    deleteDoc({ documentId }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error('Method not implemented');
+        });
+    }
+}
+exports.HypersignEdvClientEd25519VerificationKey2020 = HypersignEdvClientEd25519VerificationKey2020;
+var invocationType;
+(function (invocationType) {
+    invocationType["Ed25519VerificationKey2020"] = "Ed25519VerificationKey2020";
+    invocationType["HypersignEdvClientEcdsaSecp256k1"] = "HypersignEdvClientEcdsaSecp256k1";
+})(invocationType || (invocationType = {}));
+var keyagreementType;
+(function (keyagreementType) {
+    keyagreementType["X25519KeyAgreementKey2020"] = "X25519KeyAgreementKey2020";
+    keyagreementType["X25519KeyAgreementKeyEIP5630"] = "X25519KeyAgreementKeyEIP5630";
+})(keyagreementType || (keyagreementType = {}));
+function HypersignEdvClient(params) {
+    // : HypersignEdvClientEcdsaSecp256k1 | HypersignEdvClientEd25519VerificationKey2020
+    if (!params.url)
+        throw new Error('edvsUrl is required');
+    if (!params.invocationKeyPair)
+        throw new Error('InvocationKeyPair is required');
+    if (!params.keyagreementKeyPair)
+        throw new Error('KeyAgreementKeyPair is required');
+    if (!params.invocationKeyPair.id)
+        throw new Error('InvocationKeyPair.id is required');
+    if (!params.invocationKeyPair.type)
+        throw new Error('InvocationKeyPair.type is required');
+    if (params.invocationKeyPair.type === invocationType.Ed25519VerificationKey2020 && !params.invocationKeyPair.publicKeyMultibase)
+        throw new Error('InvocationKeyPair.publicKeyMultibase is required');
+    if (params.invocationKeyPair.type === invocationType.HypersignEdvClientEcdsaSecp256k1 &&
+        !params.invocationKeyPair.blockchainAccountId)
+        throw new Error('InvocationKeyPair.blockchainAccountId is required');
+    if (!params.keyagreementKeyPair.id)
+        throw new Error('KeyAgreementKeyPair.id is required');
+    if (!params.keyagreementKeyPair.type)
+        throw new Error('KeyAgreementKeyPair.type is required');
+    if (params.keyagreementKeyPair.type === keyagreementType.X25519KeyAgreementKey2020 &&
+        !params.keyagreementKeyPair.publicKeyMultibase)
+        throw new Error('KeyAgreementKeyPair.publicKeyMultibase is required');
+    if (params.keyagreementKeyPair.type === keyagreementType.X25519KeyAgreementKeyEIP5630 &&
+        !params.keyagreementKeyPair.publicKeyMultibase)
+        throw new Error('KeyAgreementKeyPair.publicKeyMultibase is required');
+    if (params.invocationKeyPair.type === invocationType.Ed25519VerificationKey2020 &&
+        params.keyagreementKeyPair.type === keyagreementType.X25519KeyAgreementKey2020) {
+        if (!params.keyResolver)
+            throw new Error('keyResolver is required');
+        return new HypersignEdvClientEd25519VerificationKey2020({
+            url: params.url,
+            ed25519VerificationKey2020: params.invocationKeyPair,
+            x25519KeyAgreementKey2020: params.keyagreementKeyPair,
+            keyResolver: params.keyResolver,
+            shaHmacKey2020: params.shaHmacKey2020,
+        });
+    }
+    else {
+        return new HypersignEdvClientEcdsaSecp256k1_1.default({
+            url: params.url,
+            verificationMethod: params.invocationKeyPair,
+            // Type Definition Inline
+            keyAgreement: {
+                id: params.keyagreementKeyPair.id,
+                type: 'X25519KeyAgreementKeyEIP5630',
+                publicKeyMultibase: params.keyagreementKeyPair.publicKeyMultibase,
+                controller: params.keyagreementKeyPair.controller,
+            },
+        });
+    }
+}
 exports.default = HypersignEdvClient;

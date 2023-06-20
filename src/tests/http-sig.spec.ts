@@ -12,7 +12,7 @@ const keyResolverEd25519 = async () => {
 
 async function test(){
     const keypair = await Ed25519Keypair();
-    const hsCipher = new HypersignZCapHttpSigner({ keyAgreementKey: keypair })
+    const hsCipher = new HypersignZCapHttpSigner({ capabilityInvocationKey: keypair })
     
     const BASE_URL = 'http://localhost:3001';
 

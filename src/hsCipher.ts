@@ -57,6 +57,7 @@ export default class HypersignCipher {
   // TODO: bas way of doing it
   private async _getX25519KeyAgreementResolver(keyResolver = this.keyResolver, id: string): Promise<any> {
     const keypairObj = await keyResolver({ id });
+
     if (keypairObj.type === VerificationKeyTypes.Ed25519VerificationKey2020) {
       const keyAgreementKeyPair: X25519KeyAgreementKey2020 = X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({
         keyPair: keypairObj,
@@ -69,6 +70,20 @@ export default class HypersignCipher {
     } else {
       throw new Error('Unsupported type  ' + keypairObj.type);
     }
+  }
+
+  private async resolver({ id }) {
+    const pubkey = id.split('#')[1];
+    let keyPair = {
+      publicKeyMultibase: '',
+    };
+    keyPair.publicKeyMultibase = pubkey;
+
+    const keyAgreementKeyPair: X25519KeyAgreementKey2020 = X25519KeyAgreementKey2020.from({
+      publicKeyMultibase: keyPair.publicKeyMultibase,
+      id,
+    });
+    return keyAgreementKeyPair;
   }
 
   // helper to create default recipients
@@ -86,21 +101,54 @@ export default class HypersignCipher {
       : [];
   }
 
+  private _createParticipants(
+    recipients: Array<{
+      id;
+      type;
+    }>,
+  ) {
+    return recipients.map((recipient) => {
+      if (recipient.type === 'X25519KeyAgreementKey2020') {
+        const pubkey = recipient.id.split('#')[1];
+        const id = recipient.id.split('#')[0];
+        let keyPair = {
+          publicKeyMultibase: '',
+        };
+        keyPair.publicKeyMultibase = pubkey;
+        const x25519keyAgreementKeyPub = X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({ keyPair });
+
+        return {
+          header: {
+            kid: id + '#' + x25519keyAgreementKeyPub.publicKeyMultibase,
+            // only supported algorithm
+            alg: 'ECDH-ES+A256KW',
+          },
+        };
+      } else {
+        // comming soon
+      }
+    });
+  }
+
   public async encryptObject({
     plainObject,
     recipients = [],
     keyResolver = this.keyResolver,
     keyAgreementKey = this.keyAgreementKey,
   }: IEncryptionRequest): Promise<object> {
+    // worng way of doing it
     const x25519keyAgreementKey = await this._getX25519KeyAgreementKey(keyAgreementKey);
-    // If not rece
+
     if (recipients.length === 0 && x25519keyAgreementKey) {
       recipients = this._createDefaultRecipients(x25519keyAgreementKey);
+    } else {
+      recipients = this._createParticipants(recipients);
     }
 
     // keyResolver is required because Notice that recipients lists only key IDs, not the keys themselves.
     // A keyResolver is a function that accepts a key ID and resolves to the public key corresponding to it.
-    const kr = await this._getX25519KeyAgreementResolver(keyResolver, x25519keyAgreementKey.id);
+    const kr = await this.resolver;
+
     const jwe = await this.cipher.encryptObject({ obj: plainObject, recipients, keyResolver: kr });
     return jwe;
   }
