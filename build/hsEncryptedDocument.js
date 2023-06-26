@@ -6,10 +6,10 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 class HypersignEncryptedDocument {
-    constructor({ data, indexd, metadata, jwe, id, sequence, }) {
+    constructor({ encryptedData, indexd, metadata, jwe, id, sequence, }) {
         this.encDoc = {
             jwe: jwe ? jwe : undefined,
-            data: data ? data : undefined,
+            encryptedData: encryptedData ? encryptedData : undefined,
             metadata: metadata ? metadata : undefined,
             indexed: indexd ? indexd : undefined,
             id,

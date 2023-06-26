@@ -9,14 +9,14 @@ export default class HypersignEncryptedDocument {
   encDoc: IEncryptedDoc;
 
   constructor({
-    data,
+    encryptedData,
     indexd,
     metadata,
     jwe,
     id,
     sequence,
   }: {
-    data?: any;
+    encryptedData?: any;
     indexd?: Array<any>;
     metadata?: any;
     jwe?: any;
@@ -25,7 +25,7 @@ export default class HypersignEncryptedDocument {
   }) {
     this.encDoc = {
       jwe: jwe ? jwe : undefined,
-      data: data ? data : undefined,
+      encryptedData: encryptedData ? encryptedData : undefined,
       metadata: metadata ? metadata : undefined,
       indexed: indexd ? indexd : undefined,
       id,

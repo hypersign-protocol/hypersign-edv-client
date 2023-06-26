@@ -519,7 +519,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
       algorithm: 'sha256-eth-personalSign',
     };
 
-    const hsEncDoc = new HypersignEncryptedDocument({ data: encryptedDocument, id: documentId, metadata, sequence });
+    const hsEncDoc = new HypersignEncryptedDocument({ encryptedData: encryptedDocument, id: documentId, metadata, sequence });
 
     const body = hsEncDoc.get();
 
@@ -583,7 +583,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
       algorithm: 'sha256-eth-personalSign',
     };
 
-    const hsEncDoc = new HypersignEncryptedDocument({ data: encryptedDocument, metadata, id: documentId, sequence });
+    const hsEncDoc = new HypersignEncryptedDocument({ encryptedData: encryptedDocument, metadata, id: documentId, sequence });
 
     const body = hsEncDoc.get();
     const method = 'PUT';
@@ -736,7 +736,9 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
   }
 
   public async fetchAllDocs({ edvId, limit, page }) {
-    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
+    if (!limit) limit = 10;
+    if (!page) page = 1;
+    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/documents' + `?limit=${limit}&page=${page}`;
 
     const headers = {
       created: Number(new Date()).toString(),

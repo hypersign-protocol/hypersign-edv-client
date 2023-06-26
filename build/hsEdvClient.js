@@ -194,13 +194,31 @@ class HypersignEdvClientEd25519VerificationKey2020 {
      * @param sequence Optional sequence number, default is 0
      * @returns newly created document
      */
-    updateDoc({ document, documentId, sequence, edvId, metadata, }) {
+    updateDoc({ document, documentId, sequence, edvId, metadata, indexs, }) {
         return __awaiter(this, void 0, void 0, function* () {
             // encrypt the document
+            let finalIndex;
+            if (indexs) {
+                const hmac = yield Hmac_1.default.create({
+                    key: this.shaHmacKey2020.key,
+                    id: this.shaHmacKey2020.id,
+                });
+                const indexDoc = new IndexHelper_1.IndexHelper();
+                indexs.forEach((attr) => __awaiter(this, void 0, void 0, function* () {
+                    indexDoc.ensureIndex({
+                        attribute: attr.index,
+                        unique: attr.unique,
+                        hmac,
+                    });
+                }));
+                finalIndex = yield indexDoc.createEntry({ doc: document, hmac });
+                console.log('finalIndex', finalIndex);
+                console.log('finalIndexUpadte', yield indexDoc.updateEntry({ doc: document, hmac }));
+            }
             const jwe = yield this.hsCipher.encryptObject({
                 plainObject: document,
             });
-            const hsEncDoc = new hsEncryptedDocument_1.default({ jwe, id: documentId, metadata, sequence });
+            const hsEncDoc = new hsEncryptedDocument_1.default({ jwe, indexd: [finalIndex], id: documentId, metadata, sequence });
             // form the http request header by signing the header
             const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
             const headers = {
@@ -291,7 +309,11 @@ class HypersignEdvClientEd25519VerificationKey2020 {
     }
     fetchAllDocs({ edvId, limit, page }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+            if (!limit)
+                limit = 10;
+            if (!page)
+                page = 1;
+            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/documents' + '?limit=' + limit + '&page=' + page;
             const method = 'GET';
             const headers = {
                 // digest signature

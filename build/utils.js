@@ -34,10 +34,11 @@ class Utils {
                 return data;
             }
             catch (e) {
+                console.log(e);
                 const { response } = e;
                 const { data, status, statusText } = response;
                 if (data) {
-                    throw new Error(data);
+                    return data;
                 }
                 else {
                     throw new Error(statusText);

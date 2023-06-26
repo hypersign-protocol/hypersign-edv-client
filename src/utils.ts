@@ -28,10 +28,12 @@ export default class Utils {
       const { data } = resp;
       return data;
     } catch (e: any) {
+      console.log(e);
+
       const { response } = e;
       const { data, status, statusText } = response;
       if (data) {
-        throw new Error(data);
+        return data;
       } else {
         throw new Error(statusText);
       }

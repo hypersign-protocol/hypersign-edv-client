@@ -455,7 +455,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 vermethoddid: this.verificationMethod.id,
                 algorithm: 'sha256-eth-personalSign',
             };
-            const hsEncDoc = new hsEncryptedDocument_1.default({ data: encryptedDocument, id: documentId, metadata, sequence });
+            const hsEncDoc = new hsEncryptedDocument_1.default({ encryptedData: encryptedDocument, id: documentId, metadata, sequence });
             const body = hsEncDoc.get();
             const { signature, canonicalHeaders, signedHeaders, payloadHash } = yield this.signRequest({
                 url: edvDocAddUrl,
@@ -498,7 +498,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 vermethoddid: this.verificationMethod.id,
                 algorithm: 'sha256-eth-personalSign',
             };
-            const hsEncDoc = new hsEncryptedDocument_1.default({ data: encryptedDocument, metadata, id: documentId, sequence });
+            const hsEncDoc = new hsEncryptedDocument_1.default({ encryptedData: encryptedDocument, metadata, id: documentId, sequence });
             const body = hsEncDoc.get();
             const method = 'PUT';
             const { signature, canonicalHeaders, signedHeaders, payloadHash } = yield this.signRequest({
@@ -619,7 +619,11 @@ class HypersignEdvClientEcdsaSecp256k1 {
     }
     fetchAllDocs({ edvId, limit, page }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+            if (!limit)
+                limit = 10;
+            if (!page)
+                page = 1;
+            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/documents' + `?limit=${limit}&page=${page}`;
             const headers = {
                 created: Number(new Date()).toString(),
                 'content-type': 'application/json',

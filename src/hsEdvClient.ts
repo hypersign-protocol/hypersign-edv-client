@@ -254,18 +254,43 @@ export class HypersignEdvClientEd25519VerificationKey2020 {
     sequence,
     edvId,
     metadata,
+    indexs,
   }: {
     document: any;
     documentId?: string;
     sequence?: number;
     edvId: string;
     metadata?: any;
+    indexs?: Array<{ index: String; unique: boolean }>;
   }) {
     // encrypt the document
+
+    let finalIndex;
+    if (indexs) {
+      const hmac = await Hmac.create({
+        key: this.shaHmacKey2020.key,
+        id: this.shaHmacKey2020.id,
+      });
+
+      const indexDoc = new IndexHelper();
+
+      indexs.forEach(async (attr) => {
+        indexDoc.ensureIndex({
+          attribute: attr.index,
+          unique: attr.unique,
+          hmac,
+        });
+      });
+
+      finalIndex = await indexDoc.createEntry({ doc: document, hmac });
+      console.log('finalIndex', finalIndex);
+
+      console.log('finalIndexUpadte', await indexDoc.updateEntry({ doc: document, hmac }));
+    }
     const jwe = await this.hsCipher.encryptObject({
       plainObject: document,
     });
-    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, metadata, sequence });
+    const hsEncDoc = new HypersignEncryptedDocument({ jwe, indexd: [finalIndex], id: documentId, metadata, sequence });
 
     // form the http request header by signing the header
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
@@ -363,7 +388,10 @@ export class HypersignEdvClientEd25519VerificationKey2020 {
   }
 
   public async fetchAllDocs({ edvId, limit, page }) {
-    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
+    if (!limit) limit = 10;
+    if (!page) page = 1;
+
+    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/documents' + '?limit=' + limit + '&page=' + page;
     const method = 'GET';
     const headers = {
       // digest signature
