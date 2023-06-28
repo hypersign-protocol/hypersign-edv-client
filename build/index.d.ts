@@ -3,11 +3,11 @@
  * All rights reserved.
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
-import HypersignEdvClient from './hsEdvClient';
+import HypersignEdvClient, { HypersignEdvClientEd25519VerificationKey2020 } from './hsEdvClient';
 import HypersignCipher from './hsCipher';
 import HypersignZCapHttpSigner from './hsZCapHttpSig';
 import HypersignEdvClientEcdsaSecp256k1 from './HypersignEdvClientEcdsaSecp256k1';
 import { IndexHelper } from './IndexHelper';
 import Hmac from './Hmac';
-export { HypersignEdvClient, HypersignCipher, HypersignZCapHttpSigner, HypersignEdvClientEcdsaSecp256k1, Hmac, IndexHelper };
+export { HypersignEdvClient, HypersignCipher, HypersignZCapHttpSigner, HypersignEdvClientEcdsaSecp256k1, Hmac, IndexHelper, HypersignEdvClientEd25519VerificationKey2020, };
 //# sourceMappingURL=index.d.ts.map

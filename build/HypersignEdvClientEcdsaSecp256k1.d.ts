@@ -1,17 +1,4 @@
-import { IDataVaultConfiguration } from './hsEdvDataModels';
-interface IVerifcationMethod {
-    id: string;
-    type: string;
-    controller: string;
-    publicKeyMultibase: string;
-    blockchainAccountId: string;
-}
-interface KeyAgreementKeyPair {
-    id: string;
-    controller?: string;
-    type: 'X25519KeyAgreementKeyEIP5630';
-    publicKeyMultibase: string;
-}
+import { IDataVaultConfiguration, IKeyAgreementKey, IVerifcationMethod } from './Types';
 export default class HypersignEdvClientEcdsaSecp256k1 {
     private edvsUrl;
     private verificationMethod;
@@ -20,7 +7,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     constructor({ url, verificationMethod, keyAgreement, }: {
         url?: string;
         verificationMethod: IVerifcationMethod;
-        keyAgreement?: KeyAgreementKeyPair;
+        keyAgreement?: IKeyAgreementKey;
     });
     /**
      * Creates a new data vault for given configuration
@@ -34,6 +21,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     registerEdv(config: {
         edvId?: string;
         verificationMethod: IVerifcationMethod;
+        keyAgreement?: IKeyAgreementKey;
     }): Promise<IDataVaultConfiguration>;
     private canonicalizeJSON;
     private createCanonicalRequest;
@@ -85,7 +73,13 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
         documentId: string;
         edvId: string;
         sequence?: number;
-    }): Promise<any>;
+    }): Promise<{
+        message: string;
+        document: {
+            id: string;
+            encryptedData: any;
+        };
+    }>;
     decryptDocument({ encryptedDocument, recipient, }: {
         encryptedDocument: any;
         recipient: {
@@ -99,6 +93,6 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
         limit: any;
         page: any;
     }): Promise<any>;
+    Query(): Promise<void>;
 }
-export {};
 //# sourceMappingURL=HypersignEdvClientEcdsaSecp256k1.d.ts.map

@@ -23,13 +23,12 @@ const tweetnacl_1 = __importDefault(require("tweetnacl"));
 const tweetnacl_util_1 = __importDefault(require("tweetnacl-util"));
 const utils_1 = __importDefault(require("./utils"));
 const hsEncryptedDocument_1 = __importDefault(require("./hsEncryptedDocument"));
-const hsEdvDataModels_1 = require("./hsEdvDataModels");
+const Types_1 = require("./Types");
 const web3_1 = __importDefault(require("web3"));
 const ethUtil = require('ethereumjs-util');
-const sigUtil = require('@metamask/eth-sig-util');
 // Path: src/hsEdvClient.ts
 const crypto_1 = __importDefault(require("crypto"));
-const hsEdvDataModels_2 = require("./hsEdvDataModels");
+const Types_2 = require("./Types");
 // edv client using metamask
 const multibaseBase58ToBase64 = (publicKeyMultibase) => {
     if (publicKeyMultibase == undefined) {
@@ -65,6 +64,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
      * @returns newly created data vault configuration
      */
     registerEdv(config) {
+        var _a, _b, _c, _d;
         return __awaiter(this, void 0, void 0, function* () {
             this.verificationMethod = this.verificationMethod;
             const edvConfig = {};
@@ -77,11 +77,23 @@ class HypersignEdvClientEcdsaSecp256k1 {
             edvConfig.referenceId = 'primary'; // default values
             edvConfig.invoker = config.verificationMethod.id; // default values
             edvConfig.delegator = config.verificationMethod.id; // default values
+            if (config.keyAgreement) {
+                edvConfig.keyAgreementKey = {
+                    id: (_a = config.keyAgreement) === null || _a === void 0 ? void 0 : _a.id,
+                    type: (_b = config.keyAgreement) === null || _b === void 0 ? void 0 : _b.type,
+                };
+            }
+            else {
+                edvConfig.keyAgreementKey = {
+                    id: (_c = this.keyAgreement) === null || _c === void 0 ? void 0 : _c.id,
+                    type: (_d = this.keyAgreement) === null || _d === void 0 ? void 0 : _d.type,
+                };
+            }
             if (this.verificationMethod.blockchainAccountId.includes('eip155:')) {
-                edvConfig.invokerVerificationMethodType = hsEdvDataModels_1.VerificationKeyTypes.EcdsaSecp256k1RecoveryMethod2020;
+                edvConfig.invokerVerificationMethodType = Types_1.VerificationKeyTypes.EcdsaSecp256k1RecoveryMethod2020;
             }
             else if (this.verificationMethod.blockchainAccountId.includes('cosmos:')) {
-                edvConfig.invokerVerificationMethodType = hsEdvDataModels_1.VerificationKeyTypes.EcdsaSecp256k1VerificationKey2019;
+                edvConfig.invokerVerificationMethodType = Types_1.VerificationKeyTypes.EcdsaSecp256k1VerificationKey2019;
             }
             else {
                 throw new Error('Verification method not supported');
@@ -243,10 +255,10 @@ class HypersignEdvClientEcdsaSecp256k1 {
             let walletType;
             let walletAddress = publicKeyOrAddress.split(':')[2];
             if (publicKeyOrAddress.includes('eip155:')) {
-                walletType = hsEdvDataModels_2.WalletTypes.Metamask;
+                walletType = Types_2.WalletTypes.Metamask;
             }
             else {
-                walletType = hsEdvDataModels_2.WalletTypes.Keplr;
+                walletType = Types_2.WalletTypes.Keplr;
             }
             const signature = yield this.sign(canonicalRequest, walletAddress, walletType);
             return { signature, canonicalHeaders, signedHeaders, payloadHash };
@@ -256,10 +268,10 @@ class HypersignEdvClientEcdsaSecp256k1 {
         return __awaiter(this, void 0, void 0, function* () {
             let signature;
             switch (walletType) {
-                case hsEdvDataModels_2.WalletTypes.Metamask:
+                case Types_2.WalletTypes.Metamask:
                     signature = yield this.signWithMetamask(canonicalRequest, walletAddress);
                     break;
-                case hsEdvDataModels_2.WalletTypes.Keplr:
+                case Types_2.WalletTypes.Keplr:
                     throw new Error('Wallet type not supported');
                     //signature = await this.signWithKeplr(canonicalRequest,walletAddress)
                     break;
@@ -650,6 +662,11 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 body: undefined,
             });
             return resp;
+        });
+    }
+    Query() {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw Error('Not implemented');
         });
     }
 }

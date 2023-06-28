@@ -9,31 +9,15 @@ import nacl from 'tweetnacl';
 import naclUtil from 'tweetnacl-util';
 import Utils from './utils';
 import HypersignEncryptedDocument from './hsEncryptedDocument';
-import { IDataVaultConfiguration, VerificationKeyTypes } from './hsEdvDataModels';
+import { IDataVaultConfiguration, IEncryptedData, IKeyAgreementKey, IVerifcationMethod, VerificationKeyTypes } from './Types';
 import web3 from 'web3';
 
 const ethUtil = require('ethereumjs-util');
-const sigUtil = require('@metamask/eth-sig-util');
 
 // Path: src/hsEdvClient.ts
 import crypto from 'crypto';
 
-import { WalletTypes } from './hsEdvDataModels';
-
-interface IVerifcationMethod {
-  id: string;
-  type: string;
-  controller: string;
-  publicKeyMultibase: string;
-  blockchainAccountId: string;
-}
-
-interface KeyAgreementKeyPair {
-  id: string;
-  controller?: string;
-  type: 'X25519KeyAgreementKeyEIP5630';
-  publicKeyMultibase: string;
-}
+import { WalletTypes } from './Types';
 
 // edv client using metamask
 
@@ -48,7 +32,7 @@ const multibaseBase58ToBase64 = (publicKeyMultibase: string | undefined) => {
 export default class HypersignEdvClientEcdsaSecp256k1 {
   private edvsUrl: string;
   private verificationMethod: IVerifcationMethod;
-  private keyAgreement?: KeyAgreementKeyPair;
+  private keyAgreement?: IKeyAgreementKey;
   private encryptionPublicKeyBase64?: string;
 
   constructor({
@@ -58,7 +42,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
   }: {
     url?: string;
     verificationMethod: IVerifcationMethod;
-    keyAgreement?: KeyAgreementKeyPair;
+    keyAgreement?: IKeyAgreementKey;
   }) {
     this.edvsUrl = Utils._sanitizeURL(url || Config.Defaults.edvsBaseURl);
     if (
@@ -87,7 +71,11 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
    * @returns newly created data vault configuration
    */
 
-  public async registerEdv(config: { edvId?: string; verificationMethod: IVerifcationMethod }) {
+  public async registerEdv(config: {
+    edvId?: string;
+    verificationMethod: IVerifcationMethod;
+    keyAgreement?: IKeyAgreementKey;
+  }): Promise<IDataVaultConfiguration> {
     this.verificationMethod = this.verificationMethod;
     const edvConfig: IDataVaultConfiguration = {} as IDataVaultConfiguration;
     edvConfig.controller = config.verificationMethod.controller;
@@ -100,6 +88,18 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     edvConfig.referenceId = 'primary'; // default values
     edvConfig.invoker = config.verificationMethod.id; // default values
     edvConfig.delegator = config.verificationMethod.id; // default values
+
+    if (config.keyAgreement) {
+      edvConfig.keyAgreementKey = {
+        id: config.keyAgreement?.id,
+        type: config.keyAgreement?.type,
+      } as IKeyAgreementKey;
+    } else {
+      edvConfig.keyAgreementKey = {
+        id: this.keyAgreement?.id,
+        type: this.keyAgreement?.type,
+      } as IKeyAgreementKey;
+    }
 
     if (this.verificationMethod.blockchainAccountId.includes('eip155:')) {
       edvConfig.invokerVerificationMethodType = VerificationKeyTypes.EcdsaSecp256k1RecoveryMethod2020;
@@ -146,7 +146,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     return edvConfig;
   }
 
-  private canonicalizeJSON(json) {
+  private canonicalizeJSON(json): string {
     // Step 1: Convert to JSON string
     const jsonString = JSON.stringify(json);
 
@@ -195,7 +195,6 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
       action = 'write';
     }
     let payloadHash;
-
     if (typeof body == 'object') {
       body = this.canonicalizeJSON(body);
       if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
@@ -361,7 +360,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     return signature;
   }
 
-  private async encryptDocument({ document, recipients }: { document: object; recipients?: any }) {
+  private async encryptDocument({ document, recipients }: { document: object; recipients?: any }): Promise<IEncryptedData> {
     if (typeof document !== 'object') {
       throw new Error('Document is not an object');
     }
@@ -426,13 +425,13 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
       type: string;
       encryptionPublicKeyBase64: string;
     }>,
-  ) {
+  ): IEncryptedData {
     const msgParamsUInt8Array = naclUtil.decodeUTF8(msgParams);
 
     // const symmetricKey = nacl.randomBytes(nacl.secretbox.keyLength);
     const symmetricKey = naclUtil.decodeUTF8(this.generateRandomString(32));
 
-    const encryptedSymmetricKeys = Array<{ encryptedSymmetricKey: string; keyId: any }>();
+    const encryptedSymmetricKeys = Array<{ encryptedSymmetricKey: string; keyId: string }>();
     const ephemeralKeyPair = nacl.box.keyPair();
     const recipientNonce = nacl.randomBytes(nacl.box.nonceLength);
 
@@ -620,7 +619,13 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
    * @param sequence Optional sequence number, default is 0
    * @returns all documents (with sequences if not passed) for a documentId
    */
-  public async fetchDoc({ documentId, edvId, sequence }: { documentId: string; edvId: string; sequence?: number }) {
+  public async fetchDoc({ documentId, edvId, sequence }: { documentId: string; edvId: string; sequence?: number }): Promise<{
+    message: string;
+    document: {
+      id: string;
+      encryptedData: any;
+    };
+  }> {
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
 
     // some auth should be here may  be capability check or something
@@ -772,5 +777,9 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     });
 
     return resp;
+  }
+
+  public async Query() {
+    throw Error('Not implemented');
   }
 }

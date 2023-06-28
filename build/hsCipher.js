@@ -14,9 +14,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// TODO: Remove unnecessary codes
 const minimal_cipher_1 = require("@digitalbazaar/minimal-cipher");
 const x25519_key_agreement_key_2020_1 = require("@digitalbazaar/x25519-key-agreement-key-2020");
-const hsEdvDataModels_1 = require("./hsEdvDataModels");
+const Types_1 = require("./Types");
 const ed25519_verification_key_2020_1 = require("@digitalbazaar/ed25519-verification-key-2020");
 class HypersignCipher {
     constructor({ keyResolver, keyAgreementKey }) {
@@ -26,14 +27,14 @@ class HypersignCipher {
     }
     _getX25519KeyAgreementKey(keyAgreementKey = this.keyAgreementKey) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (keyAgreementKey.type === hsEdvDataModels_1.VerificationKeyTypes.Ed25519VerificationKey2020) {
+            if (keyAgreementKey.type === Types_1.VerificationKeyTypes.Ed25519VerificationKey2020) {
                 const ed25519KeyPair = yield ed25519_verification_key_2020_1.Ed25519VerificationKey2020.generate(Object.assign({}, keyAgreementKey));
                 const keyAgreementKeyPair = x25519_key_agreement_key_2020_1.X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({
                     keyPair: ed25519KeyPair,
                 });
                 return keyAgreementKeyPair;
             }
-            else if (keyAgreementKey.type === hsEdvDataModels_1.KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
+            else if (keyAgreementKey.type === Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
                 return keyAgreementKey;
             }
             else {
@@ -45,7 +46,7 @@ class HypersignCipher {
     _getX25519KeyAgreementResolver(keyResolver = this.keyResolver, id) {
         return __awaiter(this, void 0, void 0, function* () {
             const keypairObj = yield keyResolver({ id });
-            if (keypairObj.type === hsEdvDataModels_1.VerificationKeyTypes.Ed25519VerificationKey2020) {
+            if (keypairObj.type === Types_1.VerificationKeyTypes.Ed25519VerificationKey2020) {
                 const keyAgreementKeyPair = x25519_key_agreement_key_2020_1.X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({
                     keyPair: keypairObj,
                 });
@@ -53,7 +54,7 @@ class HypersignCipher {
                     return keyAgreementKeyPair;
                 });
             }
-            else if (keypairObj.type === hsEdvDataModels_1.KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
+            else if (keypairObj.type === Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
                 return keyResolver;
             }
             else {
@@ -108,6 +109,7 @@ class HypersignCipher {
                 };
             }
             else {
+                throw new Error('Unsupported type  ' + recipient.type);
                 // comming soon
             }
         });

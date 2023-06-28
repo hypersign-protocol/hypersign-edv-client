@@ -9,8 +9,7 @@ const Defaults = {
 };
 
 const APIs = {
-  edvAPI: '/api/v1/vault',
-  edvDocAPI: '/api/v1/edv/<EDVID>/document',
+  edvAPI: 'api/v1/vault',
 };
 
 export default {

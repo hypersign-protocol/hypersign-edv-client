@@ -5,7 +5,9 @@
  */
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
 import { X25519KeyAgreementKey2020 } from '@digitalbazaar/x25519-key-agreement-key-2020';
-import { IDataVaultConfiguration } from './hsEdvDataModels';
+import { IDataVaultConfiguration, IRecipents, IResponse } from './Types';
+import { IKeyAgreementKey, KeyResolver } from './Types';
+import HypersignEdvClientEcdsaSecp256k1 from './HypersignEdvClientEcdsaSecp256k1';
 export declare class HypersignEdvClientEd25519VerificationKey2020 {
     private edvsUrl;
     private keyResolver;
@@ -15,7 +17,7 @@ export declare class HypersignEdvClientEd25519VerificationKey2020 {
     private x25519KeyAgreementKey2020;
     private shaHmacKey2020;
     constructor({ keyResolver, url, ed25519VerificationKey2020, x25519KeyAgreementKey2020, shaHmacKey2020, }: {
-        keyResolver: Function;
+        keyResolver: KeyResolver;
         url?: string;
         ed25519VerificationKey2020: Ed25519VerificationKey2020;
         x25519KeyAgreementKey2020: X25519KeyAgreementKey2020;
@@ -42,13 +44,11 @@ export declare class HypersignEdvClientEd25519VerificationKey2020 {
         delegator?: string;
         referenceId?: string;
         controller: string;
-        keyAgreementKey?: {
-            id: string;
-            type: string;
-        };
+        keyAgreementKey?: IKeyAgreementKey;
         hmac?: {
             id: string;
             type: string;
+            key?: string;
         };
     }): Promise<IDataVaultConfiguration>;
     /**
@@ -60,17 +60,17 @@ export declare class HypersignEdvClientEd25519VerificationKey2020 {
      * @returns updated document
      */
     insertDoc({ document, metadata, documentId, sequence, edvId, recipients, indexs, }: {
-        document: any;
+        document: object;
         documentId?: string;
         sequence?: number;
-        metadata?: any;
+        metadata?: object;
         edvId: string;
-        recipients?: any;
+        recipients?: IRecipents[];
         indexs?: Array<{
             index: String;
             unique: boolean;
         }>;
-    }): Promise<any>;
+    }): Promise<IResponse>;
     /**
      * Updates doc in the data vault
      * @param document doc to be updated in plain text
@@ -89,7 +89,7 @@ export declare class HypersignEdvClientEd25519VerificationKey2020 {
             index: String;
             unique: boolean;
         }>;
-    }): Promise<any>;
+    }): Promise<IResponse>;
     /**
      * Fetchs docs related to a particular documentId
      * @param documentId Id of the document
@@ -97,16 +97,23 @@ export declare class HypersignEdvClientEd25519VerificationKey2020 {
      * @param sequence Optional sequence number, default is 0
      * @returns all documents (with sequences if not passed) for a documentId
      */
-    fetchDoc({ documentId, edvId, sequence }: {
+    fetchDoc({ documentId, edvId, sequence, }: {
         documentId: string;
         edvId: string;
         sequence?: number;
-    }): Promise<any>;
+    }): Promise<IResponse>;
     getEdvConfig(edvId: string): Promise<void>;
     fetchAllDocs({ edvId, limit, page }: {
         edvId: any;
         limit: any;
         page: any;
+    }): Promise<IResponse[]>;
+    Query({ edvId, equals, has, }: {
+        edvId: string;
+        equals?: {
+            [key: string]: string;
+        };
+        has?: Array<string>;
     }): Promise<any>;
     deleteDoc({ documentId }: {
         documentId: any;
@@ -138,12 +145,12 @@ export default function HypersignEdvClient(params: {
     url: string;
     invocationKeyPair: InvocationKeyPair;
     keyagreementKeyPair: KeyAgreementKeyPair;
-    keyResolver?: Function;
+    keyResolver?: KeyResolver;
     shaHmacKey2020?: {
         id: string;
         type: string;
         key: string;
     };
-}): any;
+}): HypersignEdvClientEd25519VerificationKey2020 | HypersignEdvClientEcdsaSecp256k1;
 export {};
 //# sourceMappingURL=hsEdvClient.d.ts.map

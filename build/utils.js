@@ -20,6 +20,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
 class Utils {
     static _sanitizeURL(url) {
+        if (url.endsWith('/')) {
+            url = url.slice(0, -1);
+        }
         return url;
     }
     static _makeAPICall(params) {
@@ -34,7 +37,6 @@ class Utils {
                 return data;
             }
             catch (e) {
-                console.log(e);
                 const { response } = e;
                 const { data, status, statusText } = response;
                 if (data) {

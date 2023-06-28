@@ -9,7 +9,6 @@ declare const _default: {
     };
     APIs: {
         edvAPI: string;
-        edvDocAPI: string;
     };
 };
 export default _default;

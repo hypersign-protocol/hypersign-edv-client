@@ -4,44 +4,27 @@
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
 
+// TODO: Remove unnecessary codes
+
 import { Cipher } from '@digitalbazaar/minimal-cipher';
 import { X25519KeyAgreementKey2020 } from '@digitalbazaar/x25519-key-agreement-key-2020';
-import { VerificationKeyTypes, KeyAgreementKeyTypes } from './hsEdvDataModels';
+import { VerificationKeyTypes, KeyAgreementKeyTypes } from './Types';
 
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
-
-interface IKeyAgreementKey {
-  id: string;
-  controller: string;
-  type: string;
-  publicKeyMultibase: string;
-  privateKeyMultibase?: string;
-}
-
-interface IEncryptionRequest {
-  plainObject: object;
-  recipients?: Array<any>;
-  keyResolver?: Function;
-  keyAgreementKey?: IKeyAgreementKey;
-}
-
-interface IDecryptionRequest {
-  jwe: any;
-  keyAgreementKey?: X25519KeyAgreementKey2020;
-}
+import { KeyResolver, IRecipents, IEncryptionRequest, IJWE, IDecryptionRequest, IKeyAgreementKey } from './Types';
 
 export default class HypersignCipher {
-  private keyResolver: Function;
-  private cipher: any;
+  private keyResolver: KeyResolver;
+  private cipher: Cipher;
   private keyAgreementKey: IKeyAgreementKey;
-  constructor({ keyResolver, keyAgreementKey }: { keyResolver: Function; keyAgreementKey?: X25519KeyAgreementKey2020 }) {
+  constructor({ keyResolver, keyAgreementKey }: { keyResolver: KeyResolver; keyAgreementKey?: X25519KeyAgreementKey2020 }) {
     this.keyResolver = keyResolver;
     this.cipher = new Cipher();
     this.keyAgreementKey = keyAgreementKey;
   }
 
   private async _getX25519KeyAgreementKey(keyAgreementKey = this.keyAgreementKey): Promise<X25519KeyAgreementKey2020> {
-    if (keyAgreementKey.type === VerificationKeyTypes.Ed25519VerificationKey2020) {
+    if ((keyAgreementKey.type as unknown as VerificationKeyTypes) === VerificationKeyTypes.Ed25519VerificationKey2020) {
       const ed25519KeyPair: Ed25519VerificationKey2020 = await Ed25519VerificationKey2020.generate({ ...keyAgreementKey });
       const keyAgreementKeyPair: X25519KeyAgreementKey2020 = X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({
         keyPair: ed25519KeyPair,
@@ -87,9 +70,9 @@ export default class HypersignCipher {
   }
 
   // helper to create default recipients
-  private _createDefaultRecipients(keyAgreementKey: X25519KeyAgreementKey2020) {
+  private _createDefaultRecipients(keyAgreementKey: X25519KeyAgreementKey2020): Array<IRecipents> {
     return keyAgreementKey
-      ? [
+      ? ([
           {
             header: {
               kid: keyAgreementKey.id,
@@ -97,8 +80,8 @@ export default class HypersignCipher {
               alg: 'ECDH-ES+A256KW',
             },
           },
-        ]
-      : [];
+        ] as unknown as Array<IRecipents>)
+      : ([] as unknown as Array<IRecipents>);
   }
 
   private _createParticipants(
@@ -106,7 +89,7 @@ export default class HypersignCipher {
       id;
       type;
     }>,
-  ) {
+  ): Array<IRecipents> {
     return recipients.map((recipient) => {
       if (recipient.type === 'X25519KeyAgreementKey2020') {
         const pubkey = recipient.id.split('#')[1];
@@ -125,9 +108,10 @@ export default class HypersignCipher {
           },
         };
       } else {
+        throw new Error('Unsupported type  ' + recipient.type);
         // comming soon
       }
-    });
+    }) as unknown as Array<IRecipents>;
   }
 
   public async encryptObject({
@@ -135,14 +119,14 @@ export default class HypersignCipher {
     recipients = [],
     keyResolver = this.keyResolver,
     keyAgreementKey = this.keyAgreementKey,
-  }: IEncryptionRequest): Promise<object> {
+  }: IEncryptionRequest): Promise<IJWE> {
     // worng way of doing it
     const x25519keyAgreementKey = await this._getX25519KeyAgreementKey(keyAgreementKey);
 
     if (recipients.length === 0 && x25519keyAgreementKey) {
       recipients = this._createDefaultRecipients(x25519keyAgreementKey);
     } else {
-      recipients = this._createParticipants(recipients);
+      recipients = this._createParticipants(recipients as any as Array<{ id; type }>);
     }
 
     // keyResolver is required because Notice that recipients lists only key IDs, not the keys themselves.

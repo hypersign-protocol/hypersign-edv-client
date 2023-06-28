@@ -14,6 +14,9 @@ interface IRequest {
 
 export default class Utils {
   static _sanitizeURL(url: string): string {
+    if (url.endsWith('/')) {
+      url = url.slice(0, -1);
+    }
     return url;
   }
 
@@ -28,8 +31,6 @@ export default class Utils {
       const { data } = resp;
       return data;
     } catch (e: any) {
-      console.log(e);
-
       const { response } = e;
       const { data, status, statusText } = response;
       if (data) {

@@ -3,14 +3,14 @@
  * All rights reserved.
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
-import { IEncryptedDoc } from './hsDocumentDataModels';
+import { IEncryptedData, IEncryptedDoc, IIndexUnit, IJWE } from './Types';
 export default class HypersignEncryptedDocument {
     encDoc: IEncryptedDoc;
     constructor({ encryptedData, indexd, metadata, jwe, id, sequence, }: {
-        encryptedData?: any;
-        indexd?: Array<any>;
+        encryptedData?: IEncryptedData;
+        indexd?: Array<IIndexUnit>;
         metadata?: any;
-        jwe?: any;
+        jwe?: IJWE;
         id?: string;
         sequence?: number;
     });

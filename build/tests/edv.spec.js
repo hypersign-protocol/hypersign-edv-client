@@ -42,11 +42,14 @@ function register() {
         console.log('New edvId is: ' + edvId);
         const m = { 'foo': 'bar' };
         // Inserting a doc in edv
-        const res = yield hsEDVClient.insertDoc({ document: m, edvId });
+        const res = yield hsEDVClient.insertDoc({
+            document: m,
+            edvId,
+        });
         console.log(res);
         // updating a doc 1st time
         m.foo = 'bar2';
-        const { id } = res;
+        const { id } = res.document;
         const res2 = yield hsEDVClient.updateDoc({ document: m, documentId: id, edvId });
         console.log(res2);
         //updating a doc 2nd time with same sequence (default will be 0)

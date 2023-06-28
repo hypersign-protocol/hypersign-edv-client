@@ -1,14 +1,10 @@
 "use strict";
-/**
- * Copyright (c) 2022, Hypermine Pvt. Ltd.
- * All rights reserved.
- * Author: Vishwas Anand Bhushan (Github @ vishwas1)
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WalletTypes = exports.HmacKeyTypes = exports.VerificationKeyTypes = exports.KeyAgreementKeyTypes = void 0;
 var KeyAgreementKeyTypes;
 (function (KeyAgreementKeyTypes) {
     KeyAgreementKeyTypes["X25519KeyAgreementKey2020"] = "X25519KeyAgreementKey2020";
+    KeyAgreementKeyTypes["X25519KeyAgreementKeyEIP5630"] = "X25519KeyAgreementKeyEIP5630";
 })(KeyAgreementKeyTypes = exports.KeyAgreementKeyTypes || (exports.KeyAgreementKeyTypes = {}));
 var VerificationKeyTypes;
 (function (VerificationKeyTypes) {

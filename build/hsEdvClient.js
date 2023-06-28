@@ -21,7 +21,7 @@ exports.HypersignEdvClientEd25519VerificationKey2020 = void 0;
 const config_1 = __importDefault(require("./config"));
 const utils_1 = __importDefault(require("./utils"));
 const hsEncryptedDocument_1 = __importDefault(require("./hsEncryptedDocument"));
-const hsEdvDataModels_1 = require("./hsEdvDataModels");
+const Types_1 = require("./Types");
 const hsCipher_1 = __importDefault(require("./hsCipher"));
 const hsZCapHttpSig_1 = __importDefault(require("./hsZCapHttpSig"));
 const HypersignEdvClientEcdsaSecp256k1_1 = __importDefault(require("./HypersignEdvClientEcdsaSecp256k1"));
@@ -30,7 +30,7 @@ const IndexHelper_1 = require("./IndexHelper");
 class HypersignEdvClientEd25519VerificationKey2020 {
     constructor({ keyResolver, url, ed25519VerificationKey2020, x25519KeyAgreementKey2020, shaHmacKey2020, }) {
         // optional parameters
-        this.edvsUrl = utils_1.default._sanitizeURL(url || config_1.default.Defaults.edvsBaseURl);
+        this.edvsUrl = new URL(utils_1.default._sanitizeURL(url || config_1.default.Defaults.edvsBaseURl));
         this.keyResolver = keyResolver;
         this.ed25519VerificationKey2020 = ed25519VerificationKey2020;
         this.x25519KeyAgreementKey2020 = x25519KeyAgreementKey2020;
@@ -39,7 +39,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
             ? shaHmacKey2020
             : {
                 id: ed25519VerificationKey2020.id,
-                type: hsEdvDataModels_1.HmacKeyTypes.Sha256HmacKey2020,
+                type: Types_1.HmacKeyTypes.Sha256HmacKey2020,
                 key: ed25519VerificationKey2020.privateKeyMultibase,
             };
         // always ed25519VerificationKey2020
@@ -60,10 +60,10 @@ class HypersignEdvClientEd25519VerificationKey2020 {
         return __awaiter(this, void 0, void 0, function* () {
             const edvConfig = {};
             edvConfig.controller = config.controller;
-            if (config.keyAgreementKey && !hsEdvDataModels_1.KeyAgreementKeyTypes[config.keyAgreementKey.type]) {
+            if (config.keyAgreementKey && !Types_1.KeyAgreementKeyTypes[config.keyAgreementKey.type]) {
                 throw new Error('Unsupported keyagreement type: ' + config.keyAgreementKey.type);
             }
-            if (config.hmac && !hsEdvDataModels_1.HmacKeyTypes[config.hmac.type]) {
+            if (config.hmac && !Types_1.HmacKeyTypes[config.hmac.type]) {
                 throw new Error('Unsupported hmac type: ' + config.hmac.type);
             }
             // Adding support for custom id
@@ -73,21 +73,21 @@ class HypersignEdvClientEd25519VerificationKey2020 {
             if (config.keyAgreementKey && config.hmac) {
                 edvConfig.keyAgreementKey = {
                     id: config.keyAgreementKey.id,
-                    type: hsEdvDataModels_1.KeyAgreementKeyTypes[config.keyAgreementKey.type],
+                    type: Types_1.KeyAgreementKeyTypes[config.keyAgreementKey.type],
                 };
                 edvConfig.hmac = {
                     id: config.hmac.id,
-                    type: hsEdvDataModels_1.HmacKeyTypes[config.hmac.type],
+                    type: Types_1.HmacKeyTypes[config.hmac.type],
                 };
             }
             else {
                 edvConfig.keyAgreementKey = {
                     id: this.x25519KeyAgreementKey2020.id,
-                    type: hsEdvDataModels_1.KeyAgreementKeyTypes[this.x25519KeyAgreementKey2020.type],
+                    type: Types_1.KeyAgreementKeyTypes[this.x25519KeyAgreementKey2020.type],
                 };
                 edvConfig.hmac = {
                     id: this.shaHmacKey2020.id,
-                    type: hsEdvDataModels_1.HmacKeyTypes[this.shaHmacKey2020.type],
+                    type: Types_1.HmacKeyTypes[this.shaHmacKey2020.type],
                 };
             }
             edvConfig.sequence = 0; // default values
@@ -212,8 +212,6 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                     });
                 }));
                 finalIndex = yield indexDoc.createEntry({ doc: document, hmac });
-                console.log('finalIndex', finalIndex);
-                console.log('finalIndexUpadte', yield indexDoc.updateEntry({ doc: document, hmac }));
             }
             const jwe = yield this.hsCipher.encryptObject({
                 plainObject: document,
@@ -253,32 +251,9 @@ class HypersignEdvClientEd25519VerificationKey2020 {
      * @param sequence Optional sequence number, default is 0
      * @returns all documents (with sequences if not passed) for a documentId
      */
-    fetchDoc({ documentId, edvId, sequence }) {
+    fetchDoc({ documentId, edvId, sequence, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
-            //// TODO:  need to figure out how will it work in read capability
-            /// CAUTION:::  for time being, I have skipped signature verification wicich is security vulnerabilities
-            // // encrypt the document
-            // const jwe = await this.hsCipher.encryptObject({
-            //   plainObject: { foo: 'bar' },
-            // });
-            // const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
-            // const headers = {
-            //   // digest signature
-            //   // authorization header,
-            //   controller: this.ed25519VerificationKey2020.controller,
-            //   vermethodid: this.ed25519VerificationKey2020.id,
-            //   date: new Date().toUTCString(),
-            // };
-            // const method = 'GET';
-            // const signedHeader = await this.hsHttpSigner.signHTTP({
-            //   url: edvDocAddUrl,
-            //   method,
-            //   headers,
-            //   encryptedObject: hsEncDoc.get(), // TODO: not sure why its not working with empty object. for GET request what data does it expect??
-            //   capabilityAction: 'read',
-            // });
-            // make the call to store
             const method = 'GET';
             const headers = {
                 // digest signature
@@ -333,6 +308,47 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 url: edvDocAddUrl,
                 method: 'GET',
                 headers: signedHeader,
+            });
+            return resp;
+        });
+    }
+    Query({ edvId, equals, has, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const hmac = yield Hmac_1.default.create({
+                key: this.shaHmacKey2020.key,
+                id: this.shaHmacKey2020.id,
+            });
+            if (equals == undefined && has == undefined)
+                throw new Error('Either equals or has should be passed');
+            if (equals && has)
+                throw new Error('Either equals or has should be passed');
+            const indexDoc = new IndexHelper_1.IndexHelper();
+            const query = yield indexDoc.buildQuery({
+                hmac,
+                equals: equals ? equals : undefined,
+                has: has ? has : undefined,
+            });
+            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/query';
+            const method = 'POST';
+            const headers = {
+                // digest signature
+                // authorization header,
+                controller: this.ed25519VerificationKey2020.controller,
+                vermethodid: this.ed25519VerificationKey2020.id,
+                date: new Date().toUTCString(),
+            };
+            const signedHeader = yield this.hsHttpSigner.signHTTP({
+                url: edvDocAddUrl,
+                method,
+                headers,
+                encryptedObject: query,
+                capabilityAction: 'write',
+            });
+            const resp = yield utils_1.default._makeAPICall({
+                url: edvDocAddUrl,
+                method: 'POST',
+                headers: signedHeader,
+                body: query,
             });
             return resp;
         });

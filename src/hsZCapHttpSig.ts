@@ -6,7 +6,7 @@
 
 import { signCapabilityInvocation } from '@digitalbazaar/http-signature-zcap-invoke';
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
-import { VerificationKeyTypes } from './hsEdvDataModels';
+import { VerificationKeyTypes } from './Types';
 
 // Authorization Capabilities via HTTP signatures
 export default class HypersignZCapHttpSigner {
