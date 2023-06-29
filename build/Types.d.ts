@@ -76,7 +76,7 @@ export interface IEncryptedDoc {
     id?: string;
     sequence?: number;
     jwe?: IJWE;
-    encryptedData?: object;
+    encryptedData?: IEncryptedData;
     timestamp?: number;
     metadata?: any;
     indexed?: Array<any>;
