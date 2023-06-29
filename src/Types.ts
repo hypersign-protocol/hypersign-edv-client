@@ -25,7 +25,7 @@ export interface IRecipents {
 }
 export interface IEncryptionRequest {
   plainObject: object;
-  recipients?: Array<IRecipents>;
+  recipients?: Array<IEncryptionRecipents>;
   keyResolver?: Function;
   keyAgreementKey?: IKeyAgreementKey;
 }
@@ -86,7 +86,7 @@ export interface IEncryptedDoc {
   id?: string; //  MUST be a Base58-encoded 128-bit random value.
   sequence?: number; // MUST be an unsigned 64-bit number.
   jwe?: IJWE; // JSON Web Encryption object, if decoded results in IStructredDoc
-  encryptedData?: object; // Encrypted Data
+  encryptedData?: IEncryptedData; // Encrypted Data
   timestamp?: number; // Timestamp of the document
   metadata?: any; // Encrypted doc Metadata
   indexed?: Array<any>; // Encrypted doc Indexes
@@ -134,4 +134,16 @@ export interface IVerifcationMethod {
   controller: string;
   publicKeyMultibase: string;
   blockchainAccountId: string;
+}
+
+export interface signHTTPHeaders {
+  controller: string;
+  vermethodid: string;
+  date: string;
+}
+
+export interface IEncryptionRecipents {
+  id: string;
+  type: KeyAgreementKeyTypes;
+  publicKeyMultibase: string;
 }

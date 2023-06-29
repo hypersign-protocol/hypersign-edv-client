@@ -14,15 +14,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const hsZCapHttpSig_1 = __importDefault(require("../hsZCapHttpSig"));
 const key_spec_1 = require("./key.spec");
-const keyResolverEd25519 = () => __awaiter(void 0, void 0, void 0, function* () {
-    return {
-        id: 'did:test:controller#z6LSn4BWsAcep16pCKUW1h6g8HL18PZfSAxLMzBDQiEyEGur',
-        controller: 'did:test:controller',
-        type: 'Ed25519VerificationKey2020',
-        publicKeyMultibase: 'z6MkozgYt1TTsTyWKWZZG2foaT4isAPGsYPotAdU6RJob9Ez',
-        privateKeyMultibase: 'zrv2gheftP7VGPVoaJ7TbxGCN7pVXescn9FudB4xpF2HMWyjvzHuGVyPAb1NUeUGqqMxfHxgHiuLtR3pN5xyp8WLHR4',
-    };
-});
+// const keyResolverEd25519 = async () => {
+//     return {
+//         id: 'did:test:controller#z6LSn4BWsAcep16pCKUW1h6g8HL18PZfSAxLMzBDQiEyEGur',
+//         controller: 'did:test:controller',
+//         type: 'Ed25519VerificationKey2020',
+//         publicKeyMultibase: 'z6MkozgYt1TTsTyWKWZZG2foaT4isAPGsYPotAdU6RJob9Ez',
+//         privateKeyMultibase: 'zrv2gheftP7VGPVoaJ7TbxGCN7pVXescn9FudB4xpF2HMWyjvzHuGVyPAb1NUeUGqqMxfHxgHiuLtR3pN5xyp8WLHR4',
+//     }
+// }
 function test() {
     return __awaiter(this, void 0, void 0, function* () {
         const keypair = yield (0, key_spec_1.Ed25519Keypair)();

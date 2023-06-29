@@ -19,6 +19,7 @@ const minimal_cipher_1 = require("@digitalbazaar/minimal-cipher");
 const x25519_key_agreement_key_2020_1 = require("@digitalbazaar/x25519-key-agreement-key-2020");
 const Types_1 = require("./Types");
 const ed25519_verification_key_2020_1 = require("@digitalbazaar/ed25519-verification-key-2020");
+const HypersignEdvClientEcdsaSecp256k1_1 = require("./HypersignEdvClientEcdsaSecp256k1");
 class HypersignCipher {
     constructor({ keyResolver, keyAgreementKey }) {
         this.keyResolver = keyResolver;
@@ -92,14 +93,14 @@ class HypersignCipher {
     }
     _createParticipants(recipients) {
         return recipients.map((recipient) => {
-            if (recipient.type === 'X25519KeyAgreementKey2020') {
+            if (recipient.type === Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
                 const pubkey = recipient.id.split('#')[1];
                 const id = recipient.id.split('#')[0];
                 let keyPair = {
                     publicKeyMultibase: '',
                 };
                 keyPair.publicKeyMultibase = pubkey;
-                const x25519keyAgreementKeyPub = x25519_key_agreement_key_2020_1.X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({ keyPair });
+                const x25519keyAgreementKeyPub = keyPair;
                 return {
                     header: {
                         kid: id + '#' + x25519keyAgreementKeyPub.publicKeyMultibase,
@@ -108,27 +109,71 @@ class HypersignCipher {
                     },
                 };
             }
-            else {
-                throw new Error('Unsupported type  ' + recipient.type);
-                // comming soon
+            else if (recipient.type === Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKeyEIP5630) {
+                return {
+                    header: {
+                        kid: recipient.id.split('#')[0] + '#' + recipient.id.split('#')[1],
+                        alg: 'x25519-xsalsa20-poly1305',
+                    },
+                };
             }
         });
     }
-    encryptObject({ plainObject, recipients = [], keyResolver = this.keyResolver, keyAgreementKey = this.keyAgreementKey, }) {
+    filterRecipients(recipients) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const JWERecipient = recipients.filter((recipient) => {
+                var _a;
+                return ((_a = recipient.header) === null || _a === void 0 ? void 0 : _a.alg) === 'ECDH-ES+A256KW';
+            });
+            const Xpoly1305Recipient = recipients.filter((recipient) => {
+                var _a;
+                if (((_a = recipient.header) === null || _a === void 0 ? void 0 : _a.alg) === 'x25519-xsalsa20-poly1305') {
+                    const publicKey = recipient.header.kid.split('#')[1];
+                    const encryptionPublicKeyBase64 = (0, HypersignEdvClientEcdsaSecp256k1_1.multibaseBase58ToBase64)(publicKey);
+                    recipient['encryptionPublicKeyBase64'] = encryptionPublicKeyBase64;
+                    return {
+                        id: recipient.header.kid,
+                        type: Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKeyEIP5630,
+                        encryptionPublicKeyBase64,
+                    };
+                }
+            });
+            return {
+                JWERecipient,
+                Xpoly1305Recipient,
+            };
+        });
+    }
+    encryptObject({ plainObject, recipients = [], keyResolver, keyAgreementKey = this.keyAgreementKey, }) {
         return __awaiter(this, void 0, void 0, function* () {
             // worng way of doing it
             const x25519keyAgreementKey = yield this._getX25519KeyAgreementKey(keyAgreementKey);
+            let allRecipient;
             if (recipients.length === 0 && x25519keyAgreementKey) {
-                recipients = this._createDefaultRecipients(x25519keyAgreementKey);
+                allRecipient = this._createDefaultRecipients(x25519keyAgreementKey);
             }
             else {
-                recipients = this._createParticipants(recipients);
+                allRecipient = this._createParticipants(recipients);
             }
+            const { JWERecipient, Xpoly1305Recipient } = yield this.filterRecipients(allRecipient);
             // keyResolver is required because Notice that recipients lists only key IDs, not the keys themselves.
             // A keyResolver is a function that accepts a key ID and resolves to the public key corresponding to it.
-            const kr = yield this.resolver;
-            const jwe = yield this.cipher.encryptObject({ obj: plainObject, recipients, keyResolver: kr });
-            return jwe;
+            const kr = keyResolver ? yield keyResolver : yield this.resolver;
+            const jwe = yield this.cipher.encryptObject({ obj: plainObject, recipients: JWERecipient, keyResolver: kr });
+            const cannonizeString = JSON.stringify(plainObject, function (key, value) {
+                if (value && typeof value === 'object') {
+                    const newValue = Array.isArray(value) ? [] : {};
+                    Object.keys(value)
+                        .sort()
+                        .forEach(function (k) {
+                        newValue[k] = value[k];
+                    });
+                    return newValue;
+                }
+                return value;
+            });
+            const encryptedData = (0, HypersignEdvClientEcdsaSecp256k1_1.encrypt)(cannonizeString, Xpoly1305Recipient);
+            return { jwe, encryptedData };
         });
     }
     decryptObject({ jwe, keyAgreementKey = this.keyAgreementKey }) {

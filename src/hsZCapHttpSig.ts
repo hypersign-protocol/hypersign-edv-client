@@ -6,7 +6,7 @@
 
 import { signCapabilityInvocation } from '@digitalbazaar/http-signature-zcap-invoke';
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
-import { VerificationKeyTypes } from './Types';
+import { signHTTPHeaders } from './Types';
 
 // Authorization Capabilities via HTTP signatures
 export default class HypersignZCapHttpSigner {
@@ -37,8 +37,8 @@ export default class HypersignZCapHttpSigner {
   }: {
     url: string;
     method: string;
-    headers: object;
-    encryptedObject: object | undefined;
+    headers: signHTTPHeaders;
+    encryptedObject: Object | undefined;
     capabilityAction: string;
   }) {
     const signedHeader = await signCapabilityInvocation({

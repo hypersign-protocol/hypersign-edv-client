@@ -37,6 +37,7 @@ function X25519KeyAgreementKeyPair(key = exports.authenticationKey) {
 }
 exports.X25519KeyAgreementKeyPair = X25519KeyAgreementKeyPair;
 const hypersignDIDKeyResolverForEd25519KeyPair = ({ id }) => __awaiter(void 0, void 0, void 0, function* () {
+    id;
     // TODO: The id passed here is a verificationmethodId, we can query the DID document to fetch ed25519 authentication keys
     // Then convert ed25519 pair into X25519KeyAgreementKey2020 , so let's mock it. 
     // say we get this verificationMEthod after quering from our DID document
@@ -56,6 +57,7 @@ exports.hypersignDIDKeyResolverForEd25519KeyPair = hypersignDIDKeyResolverForEd2
 // It takes verificaiton method as input and returns 
 // This method will not have privat ekey.
 const hypersignDIDKeyResolverForX25519KeyPair = ({ id }) => __awaiter(void 0, void 0, void 0, function* () {
+    id;
     // TODO: The id passed here is a verificationmethodId, we can query the DID document to fetch ed25519 authentication keys
     // Then convert ed25519 pair into X25519KeyAgreementKey2020 , so let's mock it. 
     // say we get this verificationMEthod after quering from our DID document

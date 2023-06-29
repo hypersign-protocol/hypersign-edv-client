@@ -18,6 +18,7 @@ import {
   IIndexUnit,
   IEncryptedData,
   IResponse,
+  IEncryptionRecipents,
 } from './Types';
 
 import HypersignCipher from './hsCipher';
@@ -190,7 +191,7 @@ export class HypersignEdvClientEd25519VerificationKey2020 {
     sequence?: number;
     metadata?: object;
     edvId: string;
-    recipients?: IRecipents[];
+    recipients?: Array<IEncryptionRecipents>;
     indexs?: Array<{ index: String; unique: boolean }>;
   }): Promise<IResponse> {
     // encrypt the document
@@ -214,12 +215,19 @@ export class HypersignEdvClientEd25519VerificationKey2020 {
       finalIndex = await indexDoc.createEntry({ doc: document, hmac });
     }
 
-    const jwe = await this.hsCipher.encryptObject({
+    const { jwe, encryptedData } = await this.hsCipher.encryptObject({
       plainObject: document,
       recipients,
     });
 
-    const hsEncDoc = new HypersignEncryptedDocument({ jwe, indexd: [finalIndex], id: documentId, metadata, sequence });
+    const hsEncDoc = new HypersignEncryptedDocument({
+      jwe,
+      encryptedData,
+      indexd: [finalIndex],
+      id: documentId,
+      metadata,
+      sequence,
+    });
 
     // form the http request header by signing the header
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
@@ -294,7 +302,7 @@ export class HypersignEdvClientEd25519VerificationKey2020 {
 
       finalIndex = await indexDoc.createEntry({ doc: document, hmac });
     }
-    const jwe = await this.hsCipher.encryptObject({
+    const { jwe } = await this.hsCipher.encryptObject({
       plainObject: document,
     });
     const hsEncDoc = new HypersignEncryptedDocument({ jwe, indexd: [finalIndex], id: documentId, metadata, sequence });

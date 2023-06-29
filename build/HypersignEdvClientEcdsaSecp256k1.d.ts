@@ -1,4 +1,5 @@
-import { IDataVaultConfiguration, IKeyAgreementKey, IVerifcationMethod } from './Types';
+import { IDataVaultConfiguration, IEncryptedData, IKeyAgreementKey, IResponse, IVerifcationMethod } from './Types';
+export declare const multibaseBase58ToBase64: (publicKeyMultibase: string | undefined) => string;
 export default class HypersignEdvClientEcdsaSecp256k1 {
     private edvsUrl;
     private verificationMethod;
@@ -29,8 +30,6 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     private sign;
     private signWithMetamask;
     private encryptDocument;
-    private generateRandomString;
-    private encrypt;
     /**
      * Inserts a new docs in the data vault
      * @param document doc to be updated in plain text
@@ -46,7 +45,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
         edvId: any;
         metadata: any;
         recipients: any;
-    }): Promise<any>;
+    }): Promise<IResponse>;
     /**
      * Updates doc in the data vault
      * @param document doc to be updated in plain text
@@ -61,7 +60,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
         sequence?: number;
         edvId: string;
         metadata?: any;
-    }): Promise<any>;
+    }): Promise<IResponse>;
     /**
      * Fetchs docs related to a particular documentId
      * @param documentId Id of the document
@@ -69,17 +68,11 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
      * @param sequence Optional sequence number, default is 0
      * @returns all documents (with sequences if not passed) for a documentId
      */
-    fetchDoc({ documentId, edvId, sequence }: {
+    fetchDoc({ documentId, edvId, sequence, }: {
         documentId: string;
         edvId: string;
         sequence?: number;
-    }): Promise<{
-        message: string;
-        document: {
-            id: string;
-            encryptedData: any;
-        };
-    }>;
+    }): Promise<IResponse>;
     decryptDocument({ encryptedDocument, recipient, }: {
         encryptedDocument: any;
         recipient: {
@@ -92,7 +85,12 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
         edvId: any;
         limit: any;
         page: any;
-    }): Promise<any>;
+    }): Promise<IResponse[]>;
     Query(): Promise<void>;
 }
+export declare function encrypt(msgParams: any, recipients: Array<{
+    id: string;
+    type: string;
+    encryptionPublicKeyBase64: string;
+}>): IEncryptedData;
 //# sourceMappingURL=HypersignEdvClientEcdsaSecp256k1.d.ts.map

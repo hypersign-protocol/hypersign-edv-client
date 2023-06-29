@@ -4,6 +4,7 @@
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
 import { X25519KeyAgreementKey2020 } from '@digitalbazaar/x25519-key-agreement-key-2020';
+import { IEncryptedData } from './Types';
 import { KeyResolver, IEncryptionRequest, IJWE, IDecryptionRequest } from './Types';
 export default class HypersignCipher {
     private keyResolver;
@@ -18,7 +19,11 @@ export default class HypersignCipher {
     private resolver;
     private _createDefaultRecipients;
     private _createParticipants;
-    encryptObject({ plainObject, recipients, keyResolver, keyAgreementKey, }: IEncryptionRequest): Promise<IJWE>;
+    private filterRecipients;
+    encryptObject({ plainObject, recipients, keyResolver, keyAgreementKey, }: IEncryptionRequest): Promise<{
+        jwe: IJWE;
+        encryptedData: IEncryptedData;
+    }>;
     decryptObject({ jwe, keyAgreementKey }: IDecryptionRequest): Promise<object>;
 }
 //# sourceMappingURL=hsCipher.d.ts.map

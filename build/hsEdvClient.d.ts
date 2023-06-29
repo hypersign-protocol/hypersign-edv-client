@@ -5,7 +5,7 @@
  */
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
 import { X25519KeyAgreementKey2020 } from '@digitalbazaar/x25519-key-agreement-key-2020';
-import { IDataVaultConfiguration, IRecipents, IResponse } from './Types';
+import { IDataVaultConfiguration, IResponse, IEncryptionRecipents } from './Types';
 import { IKeyAgreementKey, KeyResolver } from './Types';
 import HypersignEdvClientEcdsaSecp256k1 from './HypersignEdvClientEcdsaSecp256k1';
 export declare class HypersignEdvClientEd25519VerificationKey2020 {
@@ -65,7 +65,7 @@ export declare class HypersignEdvClientEd25519VerificationKey2020 {
         sequence?: number;
         metadata?: object;
         edvId: string;
-        recipients?: IRecipents[];
+        recipients?: Array<IEncryptionRecipents>;
         indexs?: Array<{
             index: String;
             unique: boolean;

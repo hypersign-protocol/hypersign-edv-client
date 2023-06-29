@@ -1,6 +1,6 @@
 import { HypersignEdvClientEd25519VerificationKey2020 } from '../hsEdvClient';
 import { HypersignEdvClient } from '../index';
-import { Ed25519Keypair, X25519KeyAgreementKeyPair, authenticationKey, hypersignDIDKeyResolverForEd25519KeyPair } from './key.spec'
+import { Ed25519Keypair, authenticationKey, hypersignDIDKeyResolverForEd25519KeyPair } from './key.spec'
 import {X25519KeyAgreementKey2020} from '@digitalbazaar/x25519-key-agreement-key-2020'
 async function createClient() {
   const url = 'http://localhost:3001';

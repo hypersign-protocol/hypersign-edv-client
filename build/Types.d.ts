@@ -23,7 +23,7 @@ export interface IRecipents {
 }
 export interface IEncryptionRequest {
     plainObject: object;
-    recipients?: Array<IRecipents>;
+    recipients?: Array<IEncryptionRecipents>;
     keyResolver?: Function;
     keyAgreementKey?: IKeyAgreementKey;
 }
@@ -119,5 +119,15 @@ export interface IVerifcationMethod {
     controller: string;
     publicKeyMultibase: string;
     blockchainAccountId: string;
+}
+export interface signHTTPHeaders {
+    controller: string;
+    vermethodid: string;
+    date: string;
+}
+export interface IEncryptionRecipents {
+    id: string;
+    type: KeyAgreementKeyTypes;
+    publicKeyMultibase: string;
 }
 //# sourceMappingURL=Types.d.ts.map

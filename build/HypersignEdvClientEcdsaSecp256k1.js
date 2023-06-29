@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.encrypt = exports.multibaseBase58ToBase64 = void 0;
 /**
  * Copyright (c) 2022, Hypermine Pvt. Ltd.
  * All rights reserved.
@@ -37,6 +38,7 @@ const multibaseBase58ToBase64 = (publicKeyMultibase) => {
     const base64 = Buffer.from(multibase_1.default.decode(publicKeyMultibase)).toString('base64');
     return base64;
 };
+exports.multibaseBase58ToBase64 = multibaseBase58ToBase64;
 class HypersignEdvClientEcdsaSecp256k1 {
     constructor({ url, verificationMethod, keyAgreement, }) {
         this.edvsUrl = utils_1.default._sanitizeURL(url || config_1.default.Defaults.edvsBaseURl);
@@ -47,7 +49,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
         this.verificationMethod = verificationMethod;
         if (keyAgreement) {
             this.keyAgreement = keyAgreement;
-            this.encryptionPublicKeyBase64 = multibaseBase58ToBase64(this.keyAgreement.publicKeyMultibase);
+            this.encryptionPublicKeyBase64 = (0, exports.multibaseBase58ToBase64)(this.keyAgreement.publicKeyMultibase);
         }
         else {
             this.keyAgreement = undefined;
@@ -372,48 +374,9 @@ class HypersignEdvClientEcdsaSecp256k1 {
             //   data: cannonizeString,
             //   version: 'x25519-xsalsa20-poly1305',
             // });
-            const encryptedMessage = this.encrypt(cannonizeString, recipients);
+            const encryptedMessage = encrypt(cannonizeString, recipients);
             return encryptedMessage;
         });
-    }
-    generateRandomString(length) {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?;:\'"()[]{}-+_=*/\\|@#$%&<>';
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            const randomIndex = Math.floor(Math.random() * characters.length);
-            result += characters.charAt(randomIndex);
-        }
-        return result;
-    }
-    encrypt(msgParams, recipients) {
-        const msgParamsUInt8Array = tweetnacl_util_1.default.decodeUTF8(msgParams);
-        // const symmetricKey = nacl.randomBytes(nacl.secretbox.keyLength);
-        const symmetricKey = tweetnacl_util_1.default.decodeUTF8(this.generateRandomString(32));
-        const encryptedSymmetricKeys = Array();
-        const ephemeralKeyPair = tweetnacl_1.default.box.keyPair();
-        const recipientNonce = tweetnacl_1.default.randomBytes(tweetnacl_1.default.box.nonceLength);
-        recipients.forEach((recipient) => {
-            // Generate a random nonce for each recipient
-            // Encrypt the symmetric key with each recipient's public key
-            const publicKeyBase64 = tweetnacl_util_1.default.decodeBase64(recipient.encryptionPublicKeyBase64);
-            const encryptedSymmetricKey = tweetnacl_1.default.box(symmetricKey, recipientNonce, publicKeyBase64, ephemeralKeyPair.secretKey);
-            encryptedSymmetricKeys.push({ encryptedSymmetricKey: tweetnacl_util_1.default.encodeBase64(encryptedSymmetricKey), keyId: recipient.id });
-            // Encrypt the message using the symmetric key
-        });
-        const encryptedMessage = tweetnacl_1.default.secretbox(msgParamsUInt8Array, recipientNonce, symmetricKey);
-        const output = {
-            version: 'x25519-xsalsa20-poly1305',
-            nonce: tweetnacl_util_1.default.encodeBase64(recipientNonce),
-            ephemPublicKey: tweetnacl_util_1.default.encodeBase64(ephemeralKeyPair.publicKey),
-            recipients: encryptedSymmetricKeys.map((encryptedKey) => {
-                return {
-                    encrypted_Key: encryptedKey.encryptedSymmetricKey,
-                    keyId: encryptedKey.keyId,
-                };
-            }),
-            ciphertext: tweetnacl_util_1.default.encodeBase64(encryptedMessage),
-        };
-        return output;
     }
     /**
      * Inserts a new docs in the data vault
@@ -444,7 +407,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                     if (recipient.type !== 'X25519KeyAgreementKeyEIP5630') {
                         throw new Error('recipient must have type of X25519KeyAgreementKeyEIP5630');
                     }
-                    recipient.encryptionPublicKeyBase64 = multibaseBase58ToBase64(recipient.id.split('#')[1]);
+                    recipient.encryptionPublicKeyBase64 = (0, exports.multibaseBase58ToBase64)(recipient.id.split('#')[1]);
                 });
             }
             else {
@@ -452,7 +415,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 recipients.push({
                     id: (_c = this.keyAgreement) === null || _c === void 0 ? void 0 : _c.id,
                     type: (_d = this.keyAgreement) === null || _d === void 0 ? void 0 : _d.type,
-                    encryptionPublicKeyBase64: multibaseBase58ToBase64((_e = this.keyAgreement) === null || _e === void 0 ? void 0 : _e.id.split('#')[1]),
+                    encryptionPublicKeyBase64: (0, exports.multibaseBase58ToBase64)((_e = this.keyAgreement) === null || _e === void 0 ? void 0 : _e.id.split('#')[1]),
                 });
             }
             // encrypt the document
@@ -540,7 +503,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
      * @param sequence Optional sequence number, default is 0
      * @returns all documents (with sequences if not passed) for a documentId
      */
-    fetchDoc({ documentId, edvId, sequence }) {
+    fetchDoc({ documentId, edvId, sequence, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
             // some auth should be here may  be capability check or something
@@ -666,8 +629,48 @@ class HypersignEdvClientEcdsaSecp256k1 {
     }
     Query() {
         return __awaiter(this, void 0, void 0, function* () {
-            throw Error('Not implemented');
+            throw Error('Not Supported Yet');
         });
     }
 }
 exports.default = HypersignEdvClientEcdsaSecp256k1;
+function encrypt(msgParams, recipients) {
+    const msgParamsUInt8Array = tweetnacl_util_1.default.decodeUTF8(msgParams);
+    // const symmetricKey = nacl.randomBytes(nacl.secretbox.keyLength);
+    const symmetricKey = tweetnacl_util_1.default.decodeUTF8(generateRandomString(32));
+    const encryptedSymmetricKeys = Array();
+    const ephemeralKeyPair = tweetnacl_1.default.box.keyPair();
+    const recipientNonce = tweetnacl_1.default.randomBytes(tweetnacl_1.default.box.nonceLength);
+    recipients.forEach((recipient) => {
+        // Generate a random nonce for each recipient
+        // Encrypt the symmetric key with each recipient's public key
+        const publicKeyBase64 = tweetnacl_util_1.default.decodeBase64(recipient.encryptionPublicKeyBase64);
+        const encryptedSymmetricKey = tweetnacl_1.default.box(symmetricKey, recipientNonce, publicKeyBase64, ephemeralKeyPair.secretKey);
+        encryptedSymmetricKeys.push({ encryptedSymmetricKey: tweetnacl_util_1.default.encodeBase64(encryptedSymmetricKey), keyId: recipient.id });
+        // Encrypt the message using the symmetric key
+    });
+    const encryptedMessage = tweetnacl_1.default.secretbox(msgParamsUInt8Array, recipientNonce, symmetricKey);
+    const output = {
+        version: 'x25519-xsalsa20-poly1305',
+        nonce: tweetnacl_util_1.default.encodeBase64(recipientNonce),
+        ephemPublicKey: tweetnacl_util_1.default.encodeBase64(ephemeralKeyPair.publicKey),
+        recipients: encryptedSymmetricKeys.map((encryptedKey) => {
+            return {
+                encrypted_Key: encryptedKey.encryptedSymmetricKey,
+                keyId: encryptedKey.keyId,
+            };
+        }),
+        ciphertext: tweetnacl_util_1.default.encodeBase64(encryptedMessage),
+    };
+    return output;
+}
+exports.encrypt = encrypt;
+function generateRandomString(length) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?;:\'"()[]{}-+_=*/\\|@#$%&<>';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        result += characters.charAt(randomIndex);
+    }
+    return result;
+}

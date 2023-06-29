@@ -9,7 +9,14 @@ import nacl from 'tweetnacl';
 import naclUtil from 'tweetnacl-util';
 import Utils from './utils';
 import HypersignEncryptedDocument from './hsEncryptedDocument';
-import { IDataVaultConfiguration, IEncryptedData, IKeyAgreementKey, IVerifcationMethod, VerificationKeyTypes } from './Types';
+import {
+  IDataVaultConfiguration,
+  IEncryptedData,
+  IKeyAgreementKey,
+  IResponse,
+  IVerifcationMethod,
+  VerificationKeyTypes,
+} from './Types';
 import web3 from 'web3';
 
 const ethUtil = require('ethereumjs-util');
@@ -21,7 +28,7 @@ import { WalletTypes } from './Types';
 
 // edv client using metamask
 
-const multibaseBase58ToBase64 = (publicKeyMultibase: string | undefined) => {
+export const multibaseBase58ToBase64 = (publicKeyMultibase: string | undefined) => {
   if (publicKeyMultibase == undefined) {
     return '';
   }
@@ -403,65 +410,11 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     //   version: 'x25519-xsalsa20-poly1305',
     // });
 
-    const encryptedMessage = this.encrypt(cannonizeString, recipients);
+    const encryptedMessage = encrypt(cannonizeString, recipients);
 
     return encryptedMessage;
   }
-  private generateRandomString(length) {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?;:\'"()[]{}-+_=*/\\|@#$%&<>';
 
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      result += characters.charAt(randomIndex);
-    }
-
-    return result;
-  }
-  private encrypt(
-    msgParams,
-    recipients: Array<{
-      id: string;
-      type: string;
-      encryptionPublicKeyBase64: string;
-    }>,
-  ): IEncryptedData {
-    const msgParamsUInt8Array = naclUtil.decodeUTF8(msgParams);
-
-    // const symmetricKey = nacl.randomBytes(nacl.secretbox.keyLength);
-    const symmetricKey = naclUtil.decodeUTF8(this.generateRandomString(32));
-
-    const encryptedSymmetricKeys = Array<{ encryptedSymmetricKey: string; keyId: string }>();
-    const ephemeralKeyPair = nacl.box.keyPair();
-    const recipientNonce = nacl.randomBytes(nacl.box.nonceLength);
-
-    recipients.forEach((recipient) => {
-      // Generate a random nonce for each recipient
-      // Encrypt the symmetric key with each recipient's public key
-      const publicKeyBase64 = naclUtil.decodeBase64(recipient.encryptionPublicKeyBase64);
-      const encryptedSymmetricKey = nacl.box(symmetricKey, recipientNonce, publicKeyBase64, ephemeralKeyPair.secretKey);
-      encryptedSymmetricKeys.push({ encryptedSymmetricKey: naclUtil.encodeBase64(encryptedSymmetricKey), keyId: recipient.id });
-
-      // Encrypt the message using the symmetric key
-    });
-
-    const encryptedMessage = nacl.secretbox(msgParamsUInt8Array, recipientNonce, symmetricKey);
-
-    const output = {
-      version: 'x25519-xsalsa20-poly1305',
-      nonce: naclUtil.encodeBase64(recipientNonce),
-      ephemPublicKey: naclUtil.encodeBase64(ephemeralKeyPair.publicKey),
-      recipients: encryptedSymmetricKeys.map((encryptedKey) => {
-        return {
-          encrypted_Key: encryptedKey.encryptedSymmetricKey,
-          keyId: encryptedKey.keyId,
-        };
-      }),
-      ciphertext: naclUtil.encodeBase64(encryptedMessage),
-    };
-
-    return output;
-  }
   /**
    * Inserts a new docs in the data vault
    * @param document doc to be updated in plain text
@@ -470,7 +423,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
    * @param sequence Optional sequence number, default is 0
    * @returns updated document
    */
-  public async insertDoc({ document, documentId, sequence, edvId, metadata, recipients }) {
+  public async insertDoc({ document, documentId, sequence, edvId, metadata, recipients }): Promise<IResponse> {
     if (recipients) {
       if (!Array.isArray(recipients)) {
         throw new Error('recipients must be an array');
@@ -567,7 +520,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     sequence?: number;
     edvId: string;
     metadata?: any;
-  }) {
+  }): Promise<IResponse> {
     const encryptedDocument = await this.encryptDocument({ document });
 
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
@@ -619,13 +572,15 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
    * @param sequence Optional sequence number, default is 0
    * @returns all documents (with sequences if not passed) for a documentId
    */
-  public async fetchDoc({ documentId, edvId, sequence }: { documentId: string; edvId: string; sequence?: number }): Promise<{
-    message: string;
-    document: {
-      id: string;
-      encryptedData: any;
-    };
-  }> {
+  public async fetchDoc({
+    documentId,
+    edvId,
+    sequence,
+  }: {
+    documentId: string;
+    edvId: string;
+    sequence?: number;
+  }): Promise<IResponse> {
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
 
     // some auth should be here may  be capability check or something
@@ -740,7 +695,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     //   const output = naclUtil.encodeUTF8(decryptedMessage);
   }
 
-  public async fetchAllDocs({ edvId, limit, page }) {
+  public async fetchAllDocs({ edvId, limit, page }): Promise<IResponse[]> {
     if (!limit) limit = 10;
     if (!page) page = 1;
     const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/documents' + `?limit=${limit}&page=${page}`;
@@ -780,6 +735,63 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
   }
 
   public async Query() {
-    throw Error('Not implemented');
+    throw Error('Not Supported Yet');
   }
+}
+
+export function encrypt(
+  msgParams,
+  recipients: Array<{
+    id: string;
+    type: string;
+    encryptionPublicKeyBase64: string;
+  }>,
+): IEncryptedData {
+  const msgParamsUInt8Array = naclUtil.decodeUTF8(msgParams);
+
+  // const symmetricKey = nacl.randomBytes(nacl.secretbox.keyLength);
+  const symmetricKey = naclUtil.decodeUTF8(generateRandomString(32));
+
+  const encryptedSymmetricKeys = Array<{ encryptedSymmetricKey: string; keyId: string }>();
+  const ephemeralKeyPair = nacl.box.keyPair();
+  const recipientNonce = nacl.randomBytes(nacl.box.nonceLength);
+
+  recipients.forEach((recipient) => {
+    // Generate a random nonce for each recipient
+    // Encrypt the symmetric key with each recipient's public key
+    const publicKeyBase64 = naclUtil.decodeBase64(recipient.encryptionPublicKeyBase64);
+    const encryptedSymmetricKey = nacl.box(symmetricKey, recipientNonce, publicKeyBase64, ephemeralKeyPair.secretKey);
+    encryptedSymmetricKeys.push({ encryptedSymmetricKey: naclUtil.encodeBase64(encryptedSymmetricKey), keyId: recipient.id });
+
+    // Encrypt the message using the symmetric key
+  });
+
+  const encryptedMessage = nacl.secretbox(msgParamsUInt8Array, recipientNonce, symmetricKey);
+
+  const output = {
+    version: 'x25519-xsalsa20-poly1305',
+    nonce: naclUtil.encodeBase64(recipientNonce),
+    ephemPublicKey: naclUtil.encodeBase64(ephemeralKeyPair.publicKey),
+    recipients: encryptedSymmetricKeys.map((encryptedKey) => {
+      return {
+        encrypted_Key: encryptedKey.encryptedSymmetricKey,
+        keyId: encryptedKey.keyId,
+      };
+    }),
+    ciphertext: naclUtil.encodeBase64(encryptedMessage),
+  };
+
+  return output;
+}
+
+function generateRandomString(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?;:\'"()[]{}-+_=*/\\|@#$%&<>';
+
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters.charAt(randomIndex);
+  }
+
+  return result;
 }

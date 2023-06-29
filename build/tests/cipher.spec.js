@@ -21,7 +21,7 @@ function testwithed25519() {
             keyAgreementKey
         });
         const messsage = { 'foo': 'bar12312' };
-        const jwe = yield hsCipher.encryptObject({ plainObject: messsage });
+        const { jwe } = yield hsCipher.encryptObject({ plainObject: messsage });
         console.log(jwe);
         const plainobject = yield hsCipher.decryptObject({ jwe });
         console.log(plainobject);
@@ -36,7 +36,7 @@ function testwithex25519() {
             keyAgreementKey
         });
         const messsage = { 'foo': 'bar12312' };
-        const jwe = yield hsCipher.encryptObject({ plainObject: messsage });
+        const { jwe } = yield hsCipher.encryptObject({ plainObject: messsage });
         console.log(jwe);
         const plainobject = yield hsCipher.decryptObject({ jwe });
         console.log(plainobject);

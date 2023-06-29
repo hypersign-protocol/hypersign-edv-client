@@ -154,11 +154,18 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 }));
                 finalIndex = yield indexDoc.createEntry({ doc: document, hmac });
             }
-            const jwe = yield this.hsCipher.encryptObject({
+            const { jwe, encryptedData } = yield this.hsCipher.encryptObject({
                 plainObject: document,
                 recipients,
             });
-            const hsEncDoc = new hsEncryptedDocument_1.default({ jwe, indexd: [finalIndex], id: documentId, metadata, sequence });
+            const hsEncDoc = new hsEncryptedDocument_1.default({
+                jwe,
+                encryptedData,
+                indexd: [finalIndex],
+                id: documentId,
+                metadata,
+                sequence,
+            });
             // form the http request header by signing the header
             const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
             const headers = {
@@ -213,7 +220,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 }));
                 finalIndex = yield indexDoc.createEntry({ doc: document, hmac });
             }
-            const jwe = yield this.hsCipher.encryptObject({
+            const { jwe } = yield this.hsCipher.encryptObject({
                 plainObject: document,
             });
             const hsEncDoc = new hsEncryptedDocument_1.default({ jwe, indexd: [finalIndex], id: documentId, metadata, sequence });

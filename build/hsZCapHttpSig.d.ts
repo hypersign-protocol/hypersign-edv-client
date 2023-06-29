@@ -4,6 +4,7 @@
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
+import { signHTTPHeaders } from './Types';
 export default class HypersignZCapHttpSigner {
     private capabilityInvocationKey;
     constructor({ capabilityInvocationKey }: {
@@ -12,8 +13,8 @@ export default class HypersignZCapHttpSigner {
     signHTTP({ url, method, headers, encryptedObject, capabilityAction, }: {
         url: string;
         method: string;
-        headers: object;
-        encryptedObject: object | undefined;
+        headers: signHTTPHeaders;
+        encryptedObject: Object | undefined;
         capabilityAction: string;
     }): Promise<any>;
 }
