@@ -41,7 +41,13 @@ const multibaseBase58ToBase64 = (publicKeyMultibase) => {
 exports.multibaseBase58ToBase64 = multibaseBase58ToBase64;
 class HypersignEdvClientEcdsaSecp256k1 {
     constructor({ url, verificationMethod, keyAgreement, }) {
-        this.edvsUrl = utils_1.default._sanitizeURL(url || config_1.default.Defaults.edvsBaseURl);
+        this.edvsUrl = new URL(utils_1.default._sanitizeURL(url || config_1.default.Defaults.edvsBaseURl));
+        if (!this.edvsUrl.pathname.endsWith('/')) {
+            this.edvsUrl.pathname += '/';
+        }
+        else {
+            this.edvsUrl.pathname = this.edvsUrl.pathname;
+        }
         if (verificationMethod.type !== 'EcdsaSecp256k1VerificationKey2019' &&
             verificationMethod.type !== 'EcdsaSecp256k1RecoveryMethod2020') {
             throw new Error('Verification method not supported');

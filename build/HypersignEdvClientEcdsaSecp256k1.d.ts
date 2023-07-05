@@ -6,7 +6,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     private keyAgreement?;
     private encryptionPublicKeyBase64?;
     constructor({ url, verificationMethod, keyAgreement, }: {
-        url?: string;
+        url: string;
         verificationMethod: IVerifcationMethod;
         keyAgreement?: IKeyAgreementKey;
     });

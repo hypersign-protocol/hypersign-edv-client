@@ -37,7 +37,7 @@ export const multibaseBase58ToBase64 = (publicKeyMultibase: string | undefined) 
 };
 
 export default class HypersignEdvClientEcdsaSecp256k1 {
-  private edvsUrl: string;
+  private edvsUrl: URL;
   private verificationMethod: IVerifcationMethod;
   private keyAgreement?: IKeyAgreementKey;
   private encryptionPublicKeyBase64?: string;
@@ -47,11 +47,17 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     verificationMethod,
     keyAgreement,
   }: {
-    url?: string;
+    url: string;
     verificationMethod: IVerifcationMethod;
     keyAgreement?: IKeyAgreementKey;
   }) {
-    this.edvsUrl = Utils._sanitizeURL(url || Config.Defaults.edvsBaseURl);
+    this.edvsUrl = new URL(Utils._sanitizeURL(url || Config.Defaults.edvsBaseURl));
+    if (!this.edvsUrl.pathname.endsWith('/')) {
+      this.edvsUrl.pathname += '/';
+    } else {
+      this.edvsUrl.pathname = this.edvsUrl.pathname;
+    }
+
     if (
       verificationMethod.type !== 'EcdsaSecp256k1VerificationKey2019' &&
       verificationMethod.type !== 'EcdsaSecp256k1RecoveryMethod2020'

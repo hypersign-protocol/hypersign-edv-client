@@ -58,6 +58,11 @@ export class HypersignEdvClientEd25519VerificationKey2020 {
   }) {
     // optional parameters
     this.edvsUrl = new URL(Utils._sanitizeURL(url || Config.Defaults.edvsBaseURl));
+    if (!this.edvsUrl.pathname.endsWith('/')) {
+      this.edvsUrl.pathname += '/';
+    } else {
+      this.edvsUrl.pathname = this.edvsUrl.pathname;
+    }
     this.keyResolver = keyResolver;
     this.ed25519VerificationKey2020 = ed25519VerificationKey2020;
     this.x25519KeyAgreementKey2020 = x25519KeyAgreementKey2020;
