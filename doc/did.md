@@ -52,11 +52,11 @@
 
    ```JSON
        {
-           @context:["https://www.w3.org/ns/did/v1"],
-           id:"did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880",
-           controller:["did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880"],
-           alsoKnownAs:["did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880"],
-           verificationMethod:[
+           "@context":["https://www.w3.org/ns/did/v1"],
+           "id":"did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880",
+           "controller":["did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880"],
+           "alsoKnownAs":["did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880"],
+           "verificationMethod":[
                {
                    id:"did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880#key-1",
                    type:"EcdsaSecp256k1RecoveryMethod2020",
@@ -70,22 +70,22 @@
                    publicKeyMultibase:"z5VEZKctV8uQ4bYdzmdr3e4JVbdL2bfgf6gc4qSnEseEt",
                }
            ],
-           authentication:[
+           "authentication":[
                "did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880#key-1"
            ],
-           assertionMethod:[
+           "assertionMethod":[
                "did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880#key-1"
            ],
-           keyAgreement:[
+           "keyAgreement":[
                "did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880#key-2"
            ],
-           capabilityInvocation:[
+           "capabilityInvocation":[
                "did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880#key-1"
            ],
-           capabilityDelegation:[
+           "capabilityDelegation":[
                "did:hid:testnet:0x54ceff083c2c71b8e23b7a98bac91cf65883e880#key-1"
            ],
-           service:[]
+           "service":[]
        }
 
    ```
