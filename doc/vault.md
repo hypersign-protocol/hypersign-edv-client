@@ -1,19 +1,19 @@
 # Tutorial: Hypersign DataVault
 
-
-
 ## Hypersign DataVault currently supports two key Types :
+
     1. Ed25519VerificationKey2020 and X25519KeyAgreementKey2020
     2. EcdsaSecp256k1RecoveryMethod2020 and X25519KeyAgreementKeyEIP5630
 
-
 ## Hypersign DataVault currently supports two encryption algorithms :
+
     1. x25519-xsalsa20-poly1305
     2. AES-GCM   (JWE)
 
 ## Example Flow with Type 1 keys and AES-GCM encryption
 
 ### Type 1: Ed25519VerificationKey2020 and AES-GCM
+
 ```bash
     npm  i https://github.com/hypersign-protocol/hid-ssi-js-sdk   --save
     npm i https://github.com/hypersign-protocol/hypersign-edv-client#dev-2.0
@@ -22,7 +22,6 @@
     npm i @digitalbazaar/ed25519-verification-key-2020 --save
     npm i @digitalbazaar/x25519-key-agreement-key-2020 --save
 ```
-
 
 ```javascript
 
@@ -39,8 +38,8 @@
 
 
     const keyResolver= async ({id})=>{
-        // Resolve the key from the DID Document or from the blockchain or from any other source 
-        // sample authentication key after did resolution 
+        // Resolve the key from the DID Document or from the blockchain or from any other source
+        // sample authentication key after did resolution
         // Caution: This is just a sample snippet (This will cause error). You should resolve the key from the DID Document or from the blockchain or from any other source
 
     const authenticationKey = {
@@ -150,7 +149,7 @@
         documentId: res1.document.id,
     })
 
-    // Decrypt the fetched document 
+    // Decrypt the fetched document
     const decryptdDocument= await vault.hsCipher.decryptObject({
         jwe:res2.document.jwe,
         keyAgreementKey:x25519,
@@ -163,17 +162,19 @@
         }]
     })
 
-    
 
-    
+
+
 
 ```
+
 ## Example Flow with Type 2 keys and x25519-xsalsa20-poly1305 encryption
 
 ### Type 2: EcdsaSecp256k1RecoveryMethod2020 and Xsalsa20Poly1305EncryptionKey2019
+
 ```bash
     npm i https://github.com/hypersign-protocol/hypersign-edv-client#dev-2.0
-     
+
 ```
 
 ```js
@@ -210,7 +211,7 @@
         verificationMethod,
     })
     const data = {
-        
+
         "@context": [
             "https://www.w3.org/2018/credentials/v1",
             "https://w3id.org/security/suites/ed25519-2020/v1"
@@ -269,10 +270,10 @@
 
     const res2=await client.fetchDoc({
     edvId: 'urn:uuid:6e8bc430-9c3a-11d9-9669-0800200c9a88',
-    documentId: doc.document.id,    
+    documentId: doc.document.id,
     })
 
 
 
- 
- ```
+
+```
