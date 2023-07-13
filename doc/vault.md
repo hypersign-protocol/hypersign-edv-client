@@ -210,8 +210,9 @@
         keyAgreement:keyAgreementKeyPair,
         verificationMethod,
     })
-    const data = {
-
+  const data ={ 
+        content:{
+        
         "@context": [
             "https://www.w3.org/2018/credentials/v1",
             "https://w3id.org/security/suites/ed25519-2020/v1"
@@ -235,13 +236,8 @@
             "verificationMethod": "did:hid:testnet:z7hzKZfBMt9WCo84ZN9G42kKUqx6TrGB862dvtLVENVr5#z7hzKZfBMt9WCo84ZN9G42kKUqx6TrGB862dvtLVENVr5",
             "proofPurpose": "assertionMethod",
             "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2..."
+            }   
         }
-    }
-
-       const config = {
-        edvId:'urn:uuid:6e8bc430-9c3a-11d9-9669-0800200c9a88',
-        verificationMethod: invocationKeyPair,
-        keyAgreement: keyAgreementKeyPair
     }
 
     const res=await vault.registerEdv(config)
@@ -252,9 +248,42 @@
             id:didDocument.id.split('#')[0] + '#' + x25519.publicKeyMultibase
             type:'X25519KeyAgreementKey2020',
             }],
-    })
+        indexs:[{
+                index:'content.id',
+                unique:true
 
+            },
+            {
+                index:'content.credentialSubject.id',
+                unique:false
+                
+            },{
+                index:'content.credentialSubject.degree.type',
+                unique:false
+            },{
+                index:'content.credentialSubject.degree.name',
+                unique:false
 
+            },
+            {
+                index:'content.credentialSubject.name',
+                unique:false
+            },
+            {
+                index:'content.credentialSubject.spouse',
+                unique:false
+            }
+
+            ],
+        })
+
+        const query=await client.Query({
+            edvId: 'urn:uuid:6e8bc430-9c3a-11d9-9669-0800200c9a88',
+            equals:[
+            { 'content.credentialSubject.id':'did:hid:testnet:z7hzKZfBMt9WCo84ZN9G42kKUqx6TrGB862dvtLVENVr5'
+            }]
+            // has:['content.data']
+        })
 
 
 
