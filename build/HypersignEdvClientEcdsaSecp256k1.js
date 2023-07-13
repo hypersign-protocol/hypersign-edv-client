@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.encrypt = exports.multibaseBase58ToBase64 = void 0;
+exports.encrypt = exports.hextoMultibaseBase64 = exports.multibaseBase58ToBase64 = void 0;
 /**
  * Copyright (c) 2022, Hypermine Pvt. Ltd.
  * All rights reserved.
@@ -24,12 +24,14 @@ const tweetnacl_1 = __importDefault(require("tweetnacl"));
 const tweetnacl_util_1 = __importDefault(require("tweetnacl-util"));
 const utils_1 = __importDefault(require("./utils"));
 const hsEncryptedDocument_1 = __importDefault(require("./hsEncryptedDocument"));
+const IndexHelper_1 = require("./IndexHelper");
 const Types_1 = require("./Types");
 const web3_1 = __importDefault(require("web3"));
 const ethUtil = require('ethereumjs-util');
 // Path: src/hsEdvClient.ts
 const crypto_1 = __importDefault(require("crypto"));
 const Types_2 = require("./Types");
+const Hmac_1 = __importDefault(require("./Hmac"));
 // edv client using metamask
 const multibaseBase58ToBase64 = (publicKeyMultibase) => {
     if (publicKeyMultibase == undefined) {
@@ -39,6 +41,12 @@ const multibaseBase58ToBase64 = (publicKeyMultibase) => {
     return base64;
 };
 exports.multibaseBase58ToBase64 = multibaseBase58ToBase64;
+const hextoMultibaseBase64 = (hex) => {
+    const base64 = Buffer.from(hex.replace('0x', ''), 'hex').toString('base64');
+    const multibaseBase64 = multibase_1.default.encode('base64url', Buffer.from(base64));
+    return Buffer.from(multibaseBase64).toString('base64');
+};
+exports.hextoMultibaseBase64 = hextoMultibaseBase64;
 class HypersignEdvClientEcdsaSecp256k1 {
     constructor({ url, verificationMethod, keyAgreement, }) {
         this.edvsUrl = new URL(utils_1.default._sanitizeURL(url || config_1.default.Defaults.edvsBaseURl));
@@ -61,6 +69,62 @@ class HypersignEdvClientEcdsaSecp256k1 {
             this.keyAgreement = undefined;
             this.encryptionPublicKeyBase64 = undefined;
         }
+    }
+    allowIndexing(vaultId, allow, account, invoker) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const msgParams = {
+                domain: {
+                    name: 'Allow Indexing',
+                    version: '1',
+                },
+                message: {
+                    vaultId: vaultId,
+                    invoker: invoker ? invoker : account,
+                    action: {
+                        allow: allow,
+                    },
+                },
+                primaryType: 'Allow Indexing',
+                types: {
+                    'Allow Indexing': [
+                        { name: 'vaultId', type: 'string' },
+                        { name: 'action', type: 'Action' },
+                        { name: 'invoker', type: 'string' },
+                    ],
+                    Action: [{ name: 'allow', type: 'bool' }],
+                    EIP712Domain: [
+                        { name: 'name', type: 'string' },
+                        { name: 'version', type: 'string' },
+                    ],
+                },
+            };
+            const data = JSON.stringify(msgParams);
+            /*@ts-ignore */
+            return new Promise((resolve, reject) => {
+                /*@ts-ignore */
+                window.ethereum
+                    .request({
+                    method: 'eth_signTypedData_v4',
+                    params: [account, data],
+                })
+                    .then((signature) => {
+                    resolve(signature);
+                })
+                    .catch((err) => {
+                    reject(err);
+                });
+            });
+        });
+    }
+    getHmacSha256Key2020(account, vaultId, invoker) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const hexSignature = yield this.allowIndexing(vaultId, true, this.verificationMethod.blockchainAccountId.split(':')[2], invoker);
+            return {
+                id: this.verificationMethod.id,
+                type: 'Sha256HmacKey2020',
+                key: (0, exports.hextoMultibaseBase64)(hexSignature),
+            };
+        });
     }
     /**
      * Creates a new data vault for given configuration
@@ -106,6 +170,10 @@ class HypersignEdvClientEcdsaSecp256k1 {
             else {
                 throw new Error('Verification method not supported');
             }
+            if (!this.shaHmacKey2020) {
+                this.shaHmacKey2020 = yield this.getHmacSha256Key2020(this.verificationMethod.blockchainAccountId.split(':')[2], edvConfig.id, edvConfig.invoker);
+            }
+            console.log(this);
             const edvRegisterURl = this.edvsUrl + config_1.default.APIs.edvAPI;
             const headers = {
                 created: Number(new Date()).toString(),
@@ -351,9 +419,9 @@ class HypersignEdvClientEcdsaSecp256k1 {
             if (!window.ethereum) {
                 throw new Error('Metamask not installed');
             }
-            let encryptionPublicKey;
+            // let encryptionPublicKey;
             // @ts-ignore
-            const accounts = yield window.ethereum.request({ method: 'eth_requestAccounts' });
+            // const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             // if (!recipients) {
             //   // @ts-ignore
             //   encryptionPublicKey = await window.ethereum.request({
@@ -392,15 +460,15 @@ class HypersignEdvClientEcdsaSecp256k1 {
      * @param sequence Optional sequence number, default is 0
      * @returns updated document
      */
-    insertDoc({ document, documentId, sequence, edvId, metadata, recipients }) {
-        var _a, _b, _c, _d, _e;
+    insertDoc({ document, documentId, sequence, edvId, metadata, recipients, indexs, }) {
+        var _a, _b, _c, _d, _e, _f, _g;
         return __awaiter(this, void 0, void 0, function* () {
             if (recipients) {
                 if (!Array.isArray(recipients)) {
                     throw new Error('recipients must be an array');
                 }
                 if (recipients.length == 0) {
-                    recipients = [];
+                    recipients = Array();
                     recipients.push({
                         id: (_a = this.keyAgreement) === null || _a === void 0 ? void 0 : _a.id,
                         type: (_b = this.keyAgreement) === null || _b === void 0 ? void 0 : _b.type,
@@ -424,6 +492,22 @@ class HypersignEdvClientEcdsaSecp256k1 {
                     encryptionPublicKeyBase64: (0, exports.multibaseBase58ToBase64)((_e = this.keyAgreement) === null || _e === void 0 ? void 0 : _e.id.split('#')[1]),
                 });
             }
+            let finalIndex;
+            if (indexs) {
+                const hmac = yield Hmac_1.default.create({
+                    key: (_f = this.shaHmacKey2020) === null || _f === void 0 ? void 0 : _f.key,
+                    id: (_g = this.shaHmacKey2020) === null || _g === void 0 ? void 0 : _g.id,
+                });
+                const indexDoc = new IndexHelper_1.IndexHelper();
+                indexs.forEach((attr) => __awaiter(this, void 0, void 0, function* () {
+                    indexDoc.ensureIndex({
+                        attribute: attr.index,
+                        unique: attr.unique,
+                        hmac,
+                    });
+                }));
+                finalIndex = yield indexDoc.createEntry({ doc: document, hmac });
+            }
             // encrypt the document
             const encryptedDocument = yield this.encryptDocument({ document, recipients });
             const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
@@ -436,7 +520,13 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 vermethoddid: this.verificationMethod.id,
                 algorithm: 'sha256-eth-personalSign',
             };
-            const hsEncDoc = new hsEncryptedDocument_1.default({ encryptedData: encryptedDocument, id: documentId, metadata, sequence });
+            const hsEncDoc = new hsEncryptedDocument_1.default({
+                encryptedData: encryptedDocument,
+                id: documentId,
+                metadata,
+                sequence,
+                indexd: finalIndex,
+            });
             const body = hsEncDoc.get();
             const { signature, canonicalHeaders, signedHeaders, payloadHash } = yield this.signRequest({
                 url: edvDocAddUrl,
@@ -466,7 +556,8 @@ class HypersignEdvClientEcdsaSecp256k1 {
      * @param sequence Optional sequence number, default is 0
      * @returns newly created document
      */
-    updateDoc({ document, documentId, sequence, edvId, metadata, }) {
+    updateDoc({ document, documentId, sequence, edvId, metadata, indexs, }) {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const encryptedDocument = yield this.encryptDocument({ document });
             const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
@@ -479,7 +570,29 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 vermethoddid: this.verificationMethod.id,
                 algorithm: 'sha256-eth-personalSign',
             };
-            const hsEncDoc = new hsEncryptedDocument_1.default({ encryptedData: encryptedDocument, metadata, id: documentId, sequence });
+            let finalIndex;
+            if (indexs) {
+                const hmac = yield Hmac_1.default.create({
+                    key: (_a = this.shaHmacKey2020) === null || _a === void 0 ? void 0 : _a.key,
+                    id: (_b = this.shaHmacKey2020) === null || _b === void 0 ? void 0 : _b.id,
+                });
+                const indexDoc = new IndexHelper_1.IndexHelper();
+                indexs.forEach((attr) => __awaiter(this, void 0, void 0, function* () {
+                    indexDoc.ensureIndex({
+                        attribute: attr.index,
+                        unique: attr.unique,
+                        hmac,
+                    });
+                }));
+                finalIndex = yield indexDoc.createEntry({ doc: document, hmac });
+            }
+            const hsEncDoc = new hsEncryptedDocument_1.default({
+                indexd: [finalIndex],
+                encryptedData: encryptedDocument,
+                metadata,
+                id: documentId,
+                sequence,
+            });
             const body = hsEncDoc.get();
             const method = 'PUT';
             const { signature, canonicalHeaders, signedHeaders, payloadHash } = yield this.signRequest({
@@ -633,9 +746,52 @@ class HypersignEdvClientEcdsaSecp256k1 {
             return resp;
         });
     }
-    Query() {
+    Query({ edvId, equals, has, }) {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            throw Error('Not Supported Yet');
+            const hmac = yield Hmac_1.default.create({
+                key: (_a = this.shaHmacKey2020) === null || _a === void 0 ? void 0 : _a.key,
+                id: (_b = this.shaHmacKey2020) === null || _b === void 0 ? void 0 : _b.id,
+            });
+            if (equals == undefined && has == undefined)
+                throw new Error('Either equals or has should be passed');
+            if (equals && has)
+                throw new Error('Either equals or has should be passed');
+            const indexDoc = new IndexHelper_1.IndexHelper();
+            const query = yield indexDoc.buildQuery({
+                hmac,
+                equals: equals ? equals : undefined,
+                has: has ? has : undefined,
+            });
+            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/query';
+            const method = 'POST';
+            const headers = {
+                created: Number(new Date()).toString(),
+                'content-type': 'application/json',
+                controller: this.verificationMethod.controller,
+                vermethodid: this.verificationMethod.id,
+                keyid: this.verificationMethod.id,
+                vermethoddid: this.verificationMethod.id,
+                algorithm: 'sha256-eth-personalSign',
+            };
+            const { signature, canonicalHeaders, signedHeaders, payloadHash } = yield this.signRequest({
+                url: edvDocAddUrl,
+                query: null,
+                method,
+                headers,
+                body: query,
+                keyId: this.verificationMethod.id,
+            });
+            const base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
+            headers['Authorization'] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
+            const resp = yield utils_1.default._makeAPICall({
+                url: edvDocAddUrl,
+                method: 'POST',
+                body: query,
+                headers,
+            });
+            return resp;
+            return resp;
         });
     }
 }

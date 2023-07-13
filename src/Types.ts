@@ -144,6 +144,6 @@ export interface signHTTPHeaders {
 
 export interface IEncryptionRecipents {
   id: string;
-  type: KeyAgreementKeyTypes;
+  type: KeyAgreementKeyTypes | string;
   publicKeyMultibase: string;
 }

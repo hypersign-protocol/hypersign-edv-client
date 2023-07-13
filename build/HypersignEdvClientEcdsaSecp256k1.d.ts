@@ -1,15 +1,19 @@
 import { IDataVaultConfiguration, IEncryptedData, IKeyAgreementKey, IResponse, IVerifcationMethod } from './Types';
 export declare const multibaseBase58ToBase64: (publicKeyMultibase: string | undefined) => string;
+export declare const hextoMultibaseBase64: (hex: string) => string;
 export default class HypersignEdvClientEcdsaSecp256k1 {
     private edvsUrl;
     private verificationMethod;
     private keyAgreement?;
     private encryptionPublicKeyBase64?;
+    private shaHmacKey2020?;
     constructor({ url, verificationMethod, keyAgreement, }: {
         url: string;
         verificationMethod: IVerifcationMethod;
         keyAgreement?: IKeyAgreementKey;
     });
+    private allowIndexing;
+    private getHmacSha256Key2020;
     /**
      * Creates a new data vault for given configuration
      * @param edvId Optional edv id
@@ -38,13 +42,17 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
      * @param sequence Optional sequence number, default is 0
      * @returns updated document
      */
-    insertDoc({ document, documentId, sequence, edvId, metadata, recipients }: {
-        document: any;
-        documentId: any;
-        sequence: any;
-        edvId: any;
-        metadata: any;
-        recipients: any;
+    insertDoc({ document, documentId, sequence, edvId, metadata, recipients, indexs, }: {
+        document: object;
+        documentId?: string;
+        sequence?: number;
+        edvId: string;
+        metadata?: object;
+        recipients?: Array<any>;
+        indexs?: Array<{
+            index: String;
+            unique: boolean;
+        }>;
     }): Promise<IResponse>;
     /**
      * Updates doc in the data vault
@@ -54,12 +62,16 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
      * @param sequence Optional sequence number, default is 0
      * @returns newly created document
      */
-    updateDoc({ document, documentId, sequence, edvId, metadata, }: {
+    updateDoc({ document, documentId, sequence, edvId, metadata, indexs, }: {
         document: any;
         documentId?: string;
         sequence?: number;
         edvId: string;
         metadata?: any;
+        indexs?: Array<{
+            index: String;
+            unique: boolean;
+        }>;
     }): Promise<IResponse>;
     /**
      * Fetchs docs related to a particular documentId
@@ -86,7 +98,13 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
         limit: any;
         page: any;
     }): Promise<IResponse[]>;
-    Query(): Promise<void>;
+    Query({ edvId, equals, has, }: {
+        edvId: string;
+        equals?: {
+            [key: string]: string;
+        };
+        has?: Array<string>;
+    }): Promise<any>;
 }
 export declare function encrypt(msgParams: any, recipients: Array<{
     id: string;

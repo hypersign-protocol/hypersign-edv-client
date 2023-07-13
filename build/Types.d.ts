@@ -127,7 +127,7 @@ export interface signHTTPHeaders {
 }
 export interface IEncryptionRecipents {
     id: string;
-    type: KeyAgreementKeyTypes;
+    type: KeyAgreementKeyTypes | string;
     publicKeyMultibase: string;
 }
 //# sourceMappingURL=Types.d.ts.map
