@@ -5,10 +5,9 @@
  */
 
 import HypersignEdvClientEd25519VerificationKey2020 from './HypersignEdvClientEd25519VerificationKey2020';
-import {  KeyResolver } from './Types';
+import { KeyResolver } from './Types';
 
 import HypersignEdvClientEcdsaSecp256k1 from './HypersignEdvClientEcdsaSecp256k1';
-
 
 enum invocationType {
   Ed25519VerificationKey2020 = 'Ed25519VerificationKey2020',

@@ -3,7 +3,8 @@
  * All rights reserved.
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
-import HypersignEdvClient, { HypersignEdvClientEd25519VerificationKey2020 } from './hsEdvClient';
+import HypersignEdvClient from './hsEdvClient';
+import HypersignEdvClientEd25519VerificationKey2020 from './HypersignEdvClientEd25519VerificationKey2020';
 import HypersignCipher from './hsCipher';
 import HypersignZCapHttpSigner from './hsZCapHttpSig';
 import HypersignEdvClientEcdsaSecp256k1 from './HypersignEdvClientEcdsaSecp256k1';

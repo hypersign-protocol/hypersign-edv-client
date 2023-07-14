@@ -1,8 +1,9 @@
 ## Intro
 
-The edv client converts `Ed25519VerificationKey2020` into `X25519KeyAgreementKey2020` key pair internally and use that for encryption and decryption. For signing, it uses `Ed25519VerificationKey2020` only. As a invoker/developer, they only need to worry about `Ed25519VerificationKey2020` pair. 
+The edv client converts `Ed25519VerificationKey2020` into `X25519KeyAgreementKey2020` key pair internally and use that for encryption and decryption. For signing, it uses `Ed25519VerificationKey2020` only. As a invoker/developer, they only need to worry about `Ed25519VerificationKey2020` pair.
 
 This package exposes three classes:
+
 - `HypersignEdvClient` - for interacting with the [edv service](https://github.com/hypersign-protocol/hypersign-edv-service)
 - `HypersignCipher` - for encryption and decryption
 - `HypersignZCapHttpSigner` - for signing http/https authorization capabilities read/write)
@@ -53,8 +54,8 @@ const authenticationKey = {
 
 const ed25519Keypair = await Ed25519VerificationKey2020.generate({ ...authenticationKey });
 ```
-Note: For time being since we are not using any Key Management System (KMS), we expect client to manage the authentication key  somewhere secure. 
 
+Note: For time being since we are not using any Key Management System (KMS), we expect client to manage the authentication key somewhere secure.
 
 #### Prepare your keyresolver
 

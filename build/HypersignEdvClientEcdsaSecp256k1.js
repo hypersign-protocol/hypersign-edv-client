@@ -173,7 +173,6 @@ class HypersignEdvClientEcdsaSecp256k1 {
             if (!this.shaHmacKey2020) {
                 this.shaHmacKey2020 = yield this.getHmacSha256Key2020(this.verificationMethod.blockchainAccountId.split(':')[2], edvConfig.id, edvConfig.invoker);
             }
-            console.log(this);
             const edvRegisterURl = this.edvsUrl + config_1.default.APIs.edvAPI;
             const headers = {
                 created: Number(new Date()).toString(),
@@ -594,7 +593,6 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 sequence,
             });
             const body = hsEncDoc.get();
-            const method = 'PUT';
             const { signature, canonicalHeaders, signedHeaders, payloadHash } = yield this.signRequest({
                 url: edvDocAddUrl,
                 method: 'PUT',

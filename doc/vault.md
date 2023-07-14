@@ -210,9 +210,9 @@
         keyAgreement:keyAgreementKeyPair,
         verificationMethod,
     })
-  const data ={ 
+  const data ={
         content:{
-        
+
         "@context": [
             "https://www.w3.org/2018/credentials/v1",
             "https://w3id.org/security/suites/ed25519-2020/v1"
@@ -236,7 +236,7 @@
             "verificationMethod": "did:hid:testnet:z7hzKZfBMt9WCo84ZN9G42kKUqx6TrGB862dvtLVENVr5#z7hzKZfBMt9WCo84ZN9G42kKUqx6TrGB862dvtLVENVr5",
             "proofPurpose": "assertionMethod",
             "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2..."
-            }   
+            }
         }
     }
 
@@ -256,7 +256,7 @@
             {
                 index:'content.credentialSubject.id',
                 unique:false
-                
+
             },{
                 index:'content.credentialSubject.degree.type',
                 unique:false
