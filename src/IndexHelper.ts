@@ -1,10 +1,8 @@
 // Credits: digitalbazar
-/*@ts-ignore */
 
-import * as base64url from 'base64url-universal';
+const base64url = require('base64url-universal');
 import canonicalize from 'canonicalize';
-/*@ts-ignore */
-import { LruCache } from '@digitalbazaar/lru-memoize';
+const { LruCache } = require('@digitalbazaar/lru-memoize');
 import split from 'split-string';
 
 const crypto = globalThis.crypto;
