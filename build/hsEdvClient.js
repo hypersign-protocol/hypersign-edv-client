@@ -1,15 +1,10 @@
-"use strict";
 /**
  * Copyright (c) 2022, Hypermine Pvt. Ltd.
  * All rights reserved.
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const HypersignEdvClientEd25519VerificationKey2020_1 = __importDefault(require("./HypersignEdvClientEd25519VerificationKey2020"));
-const HypersignEdvClientEcdsaSecp256k1_1 = __importDefault(require("./HypersignEdvClientEcdsaSecp256k1"));
+import HypersignEdvClientEd25519VerificationKey2020 from './HypersignEdvClientEd25519VerificationKey2020';
+import HypersignEdvClientEcdsaSecp256k1 from './HypersignEdvClientEcdsaSecp256k1';
 var invocationType;
 (function (invocationType) {
     invocationType["Ed25519VerificationKey2020"] = "Ed25519VerificationKey2020";
@@ -20,7 +15,7 @@ var keyagreementType;
     keyagreementType["X25519KeyAgreementKey2020"] = "X25519KeyAgreementKey2020";
     keyagreementType["X25519KeyAgreementKeyEIP5630"] = "X25519KeyAgreementKeyEIP5630";
 })(keyagreementType || (keyagreementType = {}));
-function HypersignEdvClient(params) {
+export default function HypersignEdvClient(params) {
     // : HypersignEdvClientEcdsaSecp256k1 | HypersignEdvClientEd25519VerificationKey2020
     if (!params.url)
         throw new Error('edvsUrl is required');
@@ -51,7 +46,7 @@ function HypersignEdvClient(params) {
         params.keyagreementKeyPair.type === keyagreementType.X25519KeyAgreementKey2020) {
         if (!params.keyResolver)
             throw new Error('keyResolver is required');
-        return new HypersignEdvClientEd25519VerificationKey2020_1.default({
+        return new HypersignEdvClientEd25519VerificationKey2020({
             url: params.url,
             ed25519VerificationKey2020: params.invocationKeyPair,
             x25519KeyAgreementKey2020: params.keyagreementKeyPair,
@@ -60,7 +55,7 @@ function HypersignEdvClient(params) {
         });
     }
     else {
-        return new HypersignEdvClientEcdsaSecp256k1_1.default({
+        return new HypersignEdvClientEcdsaSecp256k1({
             url: params.url,
             verificationMethod: params.invocationKeyPair,
             // Type Definition Inline
@@ -73,4 +68,3 @@ function HypersignEdvClient(params) {
         });
     }
 }
-exports.default = HypersignEdvClient;

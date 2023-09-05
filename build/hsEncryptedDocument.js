@@ -1,11 +1,9 @@
-"use strict";
 /**
  * Copyright (c) 2022, Hypermine Pvt. Ltd.
  * All rights reserved.
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-class HypersignEncryptedDocument {
+export default class HypersignEncryptedDocument {
     constructor({ encryptedData, indexd, metadata, jwe, id, sequence, }) {
         this.encDoc = {
             jwe: jwe ? jwe : undefined,
@@ -21,4 +19,3 @@ class HypersignEncryptedDocument {
         return this.encDoc;
     }
 }
-exports.default = HypersignEncryptedDocument;

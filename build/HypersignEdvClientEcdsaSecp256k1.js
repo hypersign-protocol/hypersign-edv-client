@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,48 +7,41 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.encrypt = exports.hextoMultibaseBase64 = exports.multibaseBase58ToBase64 = void 0;
 /**
  * Copyright (c) 2022, Hypermine Pvt. Ltd.
  * All rights reserved.
  * Author: Pratap Mridha (Github @pratap2018)
  */
-const multibase_1 = __importDefault(require("multibase"));
-const config_1 = __importDefault(require("./config"));
-const tweetnacl_1 = __importDefault(require("tweetnacl"));
-const tweetnacl_util_1 = __importDefault(require("tweetnacl-util"));
-const utils_1 = __importDefault(require("./utils"));
-const hsEncryptedDocument_1 = __importDefault(require("./hsEncryptedDocument"));
-const IndexHelper_1 = require("./IndexHelper");
-const Types_1 = require("./Types");
-const web3_1 = __importDefault(require("web3"));
+import multibase from 'multibase';
+import Config from './config';
+import nacl from 'tweetnacl';
+import naclUtil from 'tweetnacl-util';
+import Utils from './utils';
+import HypersignEncryptedDocument from './hsEncryptedDocument';
+import { IndexHelper } from './IndexHelper';
+import { VerificationKeyTypes, } from './Types';
+import web3 from 'web3';
 const ethUtil = require('ethereumjs-util');
 // Path: src/hsEdvClient.ts
-const crypto_1 = __importDefault(require("crypto"));
-const Types_2 = require("./Types");
-const Hmac_1 = __importDefault(require("./Hmac"));
+import crypto from 'crypto';
+import { WalletTypes } from './Types';
+import Hmac from './Hmac';
 // edv client using metamask
-const multibaseBase58ToBase64 = (publicKeyMultibase) => {
+export const multibaseBase58ToBase64 = (publicKeyMultibase) => {
     if (publicKeyMultibase == undefined) {
         return '';
     }
-    const base64 = Buffer.from(multibase_1.default.decode(publicKeyMultibase)).toString('base64');
+    const base64 = Buffer.from(multibase.decode(publicKeyMultibase)).toString('base64');
     return base64;
 };
-exports.multibaseBase58ToBase64 = multibaseBase58ToBase64;
-const hextoMultibaseBase64 = (hex) => {
+export const hextoMultibaseBase64 = (hex) => {
     const base64 = Buffer.from(hex.replace('0x', ''), 'hex').toString('base64');
-    const multibaseBase64 = multibase_1.default.encode('base64url', Buffer.from(base64));
+    const multibaseBase64 = multibase.encode('base64url', Buffer.from(base64));
     return Buffer.from(multibaseBase64).toString('base64');
 };
-exports.hextoMultibaseBase64 = hextoMultibaseBase64;
-class HypersignEdvClientEcdsaSecp256k1 {
+export default class HypersignEdvClientEcdsaSecp256k1 {
     constructor({ url, verificationMethod, keyAgreement, }) {
-        this.edvsUrl = new URL(utils_1.default._sanitizeURL(url || config_1.default.Defaults.edvsBaseURl));
+        this.edvsUrl = new URL(Utils._sanitizeURL(url || Config.Defaults.edvsBaseURl));
         if (!this.edvsUrl.pathname.endsWith('/')) {
             this.edvsUrl.pathname += '/';
         }
@@ -63,7 +55,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
         this.verificationMethod = verificationMethod;
         if (keyAgreement) {
             this.keyAgreement = keyAgreement;
-            this.encryptionPublicKeyBase64 = (0, exports.multibaseBase58ToBase64)(this.keyAgreement.publicKeyMultibase);
+            this.encryptionPublicKeyBase64 = multibaseBase58ToBase64(this.keyAgreement.publicKeyMultibase);
         }
         else {
             this.keyAgreement = undefined;
@@ -122,7 +114,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
             return {
                 id: this.verificationMethod.id,
                 type: 'Sha256HmacKey2020',
-                key: (0, exports.hextoMultibaseBase64)(hexSignature),
+                key: hextoMultibaseBase64(hexSignature),
             };
         });
     }
@@ -162,10 +154,10 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 };
             }
             if (this.verificationMethod.blockchainAccountId.includes('eip155:')) {
-                edvConfig.invokerVerificationMethodType = Types_1.VerificationKeyTypes.EcdsaSecp256k1RecoveryMethod2020;
+                edvConfig.invokerVerificationMethodType = VerificationKeyTypes.EcdsaSecp256k1RecoveryMethod2020;
             }
             else if (this.verificationMethod.blockchainAccountId.includes('cosmos:')) {
-                edvConfig.invokerVerificationMethodType = Types_1.VerificationKeyTypes.EcdsaSecp256k1VerificationKey2019;
+                edvConfig.invokerVerificationMethodType = VerificationKeyTypes.EcdsaSecp256k1VerificationKey2019;
             }
             else {
                 throw new Error('Verification method not supported');
@@ -173,7 +165,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
             if (!this.shaHmacKey2020) {
                 this.shaHmacKey2020 = yield this.getHmacSha256Key2020(this.verificationMethod.blockchainAccountId.split(':')[2], edvConfig.id, edvConfig.invoker);
             }
-            const edvRegisterURl = this.edvsUrl + config_1.default.APIs.edvAPI;
+            const edvRegisterURl = this.edvsUrl + Config.APIs.edvAPI;
             const headers = {
                 created: Number(new Date()).toString(),
                 'content-type': 'application/json',
@@ -193,7 +185,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
             });
             const base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
             headers['Authorization'] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvRegisterURl,
                 method: 'POST',
                 body: edvConfig,
@@ -261,7 +253,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                     });
                 }
                 else {
-                    payloadHash = crypto_1.default
+                    payloadHash = crypto
                         .createHash('sha256')
                         .update(body || '')
                         .digest('base64');
@@ -330,10 +322,10 @@ class HypersignEdvClientEcdsaSecp256k1 {
             let walletType;
             let walletAddress = publicKeyOrAddress.split(':')[2];
             if (publicKeyOrAddress.includes('eip155:')) {
-                walletType = Types_2.WalletTypes.Metamask;
+                walletType = WalletTypes.Metamask;
             }
             else {
-                walletType = Types_2.WalletTypes.Keplr;
+                walletType = WalletTypes.Keplr;
             }
             const signature = yield this.sign(canonicalRequest, walletAddress, walletType);
             return { signature, canonicalHeaders, signedHeaders, payloadHash };
@@ -343,10 +335,10 @@ class HypersignEdvClientEcdsaSecp256k1 {
         return __awaiter(this, void 0, void 0, function* () {
             let signature;
             switch (walletType) {
-                case Types_2.WalletTypes.Metamask:
+                case WalletTypes.Metamask:
                     signature = yield this.signWithMetamask(canonicalRequest, walletAddress);
                     break;
-                case Types_2.WalletTypes.Keplr:
+                case WalletTypes.Keplr:
                     throw new Error('Wallet type not supported');
                     //signature = await this.signWithKeplr(canonicalRequest,walletAddress)
                     break;
@@ -363,7 +355,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 throw new Error('Metamask not installed');
             }
             // get chainId
-            const chainId = web3_1.default.utils.toHex(parseInt(this.verificationMethod.blockchainAccountId.split(':')[1]));
+            const chainId = web3.utils.toHex(parseInt(this.verificationMethod.blockchainAccountId.split(':')[1]));
             // @ts-ignore
             yield window.ethereum.request({
                 method: 'wallet_switchEthereumChain',
@@ -480,7 +472,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                     if (recipient.type !== 'X25519KeyAgreementKeyEIP5630') {
                         throw new Error('recipient must have type of X25519KeyAgreementKeyEIP5630');
                     }
-                    recipient.encryptionPublicKeyBase64 = (0, exports.multibaseBase58ToBase64)(recipient.id.split('#')[1]);
+                    recipient.encryptionPublicKeyBase64 = multibaseBase58ToBase64(recipient.id.split('#')[1]);
                 });
             }
             else {
@@ -488,16 +480,16 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 recipients.push({
                     id: (_c = this.keyAgreement) === null || _c === void 0 ? void 0 : _c.id,
                     type: (_d = this.keyAgreement) === null || _d === void 0 ? void 0 : _d.type,
-                    encryptionPublicKeyBase64: (0, exports.multibaseBase58ToBase64)((_e = this.keyAgreement) === null || _e === void 0 ? void 0 : _e.id.split('#')[1]),
+                    encryptionPublicKeyBase64: multibaseBase58ToBase64((_e = this.keyAgreement) === null || _e === void 0 ? void 0 : _e.id.split('#')[1]),
                 });
             }
             let finalIndex;
             if (indexs) {
-                const hmac = yield Hmac_1.default.create({
+                const hmac = yield Hmac.create({
                     key: (_f = this.shaHmacKey2020) === null || _f === void 0 ? void 0 : _f.key,
                     id: (_g = this.shaHmacKey2020) === null || _g === void 0 ? void 0 : _g.id,
                 });
-                const indexDoc = new IndexHelper_1.IndexHelper();
+                const indexDoc = new IndexHelper();
                 indexs.forEach((attr) => __awaiter(this, void 0, void 0, function* () {
                     indexDoc.ensureIndex({
                         attribute: attr.index,
@@ -509,7 +501,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
             }
             // encrypt the document
             const encryptedDocument = yield this.encryptDocument({ document, recipients });
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+            const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
             const headers = {
                 created: Number(new Date()).toString(),
                 'content-type': 'application/json',
@@ -519,7 +511,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 vermethoddid: this.verificationMethod.id,
                 algorithm: 'sha256-eth-personalSign',
             };
-            const hsEncDoc = new hsEncryptedDocument_1.default({
+            const hsEncDoc = new HypersignEncryptedDocument({
                 encryptedData: encryptedDocument,
                 id: documentId,
                 metadata,
@@ -538,7 +530,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
             const base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
             headers['Authorization'] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
             //cosmos-ADR036
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvDocAddUrl,
                 method: 'POST',
                 body,
@@ -559,7 +551,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const encryptedDocument = yield this.encryptDocument({ document });
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+            const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
             const headers = {
                 created: Number(new Date()).toString(),
                 'content-type': 'application/json',
@@ -571,11 +563,11 @@ class HypersignEdvClientEcdsaSecp256k1 {
             };
             let finalIndex;
             if (indexs) {
-                const hmac = yield Hmac_1.default.create({
+                const hmac = yield Hmac.create({
                     key: (_a = this.shaHmacKey2020) === null || _a === void 0 ? void 0 : _a.key,
                     id: (_b = this.shaHmacKey2020) === null || _b === void 0 ? void 0 : _b.id,
                 });
-                const indexDoc = new IndexHelper_1.IndexHelper();
+                const indexDoc = new IndexHelper();
                 indexs.forEach((attr) => __awaiter(this, void 0, void 0, function* () {
                     indexDoc.ensureIndex({
                         attribute: attr.index,
@@ -585,7 +577,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 }));
                 finalIndex = yield indexDoc.createEntry({ doc: document, hmac });
             }
-            const hsEncDoc = new hsEncryptedDocument_1.default({
+            const hsEncDoc = new HypersignEncryptedDocument({
                 indexd: [finalIndex],
                 encryptedData: encryptedDocument,
                 metadata,
@@ -604,7 +596,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
             const base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
             headers['Authorization'] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
             // make the call to store
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvDocAddUrl,
                 method: 'PUT',
                 body,
@@ -622,7 +614,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
      */
     fetchDoc({ documentId, edvId, sequence, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
+            const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
             // some auth should be here may  be capability check or something
             const headers = {
                 created: Number(new Date()).toString(),
@@ -643,7 +635,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
             });
             const base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
             headers['Authorization'] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvDocAddUrl,
                 method: 'GET',
                 headers,
@@ -697,14 +689,14 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 method: 'eth_decrypt',
                 params: [buffredEncryptedMessage, accounts[0]],
             });
-            const symmetricKey = tweetnacl_util_1.default.decodeUTF8(decryptedMessage);
-            const finalMessage = tweetnacl_1.default.secretbox.open(tweetnacl_util_1.default.decodeBase64(encryptedMessage.ciphertext), tweetnacl_util_1.default.decodeBase64(encryptedMessage.nonce), symmetricKey);
+            const symmetricKey = naclUtil.decodeUTF8(decryptedMessage);
+            const finalMessage = nacl.secretbox.open(naclUtil.decodeBase64(encryptedMessage.ciphertext), naclUtil.decodeBase64(encryptedMessage.nonce), symmetricKey);
             //   console.log(finalMessage);
             if (finalMessage == null) {
                 throw Error('Decryption failed');
             }
             else {
-                return tweetnacl_util_1.default.encodeUTF8(finalMessage);
+                return naclUtil.encodeUTF8(finalMessage);
             }
             //   const output = naclUtil.encodeUTF8(decryptedMessage);
         });
@@ -715,7 +707,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 limit = 10;
             if (!page)
                 page = 1;
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/documents' + `?limit=${limit}&page=${page}`;
+            const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/documents' + `?limit=${limit}&page=${page}`;
             const headers = {
                 created: Number(new Date()).toString(),
                 'content-type': 'application/json',
@@ -735,7 +727,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
             });
             const base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
             headers['Authorization'] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvDocAddUrl,
                 method: 'GET',
                 headers,
@@ -747,7 +739,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
     Query({ edvId, equals, has, }) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            const hmac = yield Hmac_1.default.create({
+            const hmac = yield Hmac.create({
                 key: (_a = this.shaHmacKey2020) === null || _a === void 0 ? void 0 : _a.key,
                 id: (_b = this.shaHmacKey2020) === null || _b === void 0 ? void 0 : _b.id,
             });
@@ -755,13 +747,13 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 throw new Error('Either equals or has should be passed');
             if (equals && has)
                 throw new Error('Either equals or has should be passed');
-            const indexDoc = new IndexHelper_1.IndexHelper();
+            const indexDoc = new IndexHelper();
             const query = yield indexDoc.buildQuery({
                 hmac,
                 equals: equals ? equals : undefined,
                 has: has ? has : undefined,
             });
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/query';
+            const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/query';
             const method = 'POST';
             const headers = {
                 created: Number(new Date()).toString(),
@@ -782,7 +774,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
             });
             const base64 = Buffer.from(signature.slice(2), 'hex').toString('base64');
             headers['Authorization'] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvDocAddUrl,
                 method: 'POST',
                 body: query,
@@ -793,38 +785,36 @@ class HypersignEdvClientEcdsaSecp256k1 {
         });
     }
 }
-exports.default = HypersignEdvClientEcdsaSecp256k1;
-function encrypt(msgParams, recipients) {
-    const msgParamsUInt8Array = tweetnacl_util_1.default.decodeUTF8(msgParams);
+export function encrypt(msgParams, recipients) {
+    const msgParamsUInt8Array = naclUtil.decodeUTF8(msgParams);
     // const symmetricKey = nacl.randomBytes(nacl.secretbox.keyLength);
-    const symmetricKey = tweetnacl_util_1.default.decodeUTF8(generateRandomString(32));
+    const symmetricKey = naclUtil.decodeUTF8(generateRandomString(32));
     const encryptedSymmetricKeys = Array();
-    const ephemeralKeyPair = tweetnacl_1.default.box.keyPair();
-    const recipientNonce = tweetnacl_1.default.randomBytes(tweetnacl_1.default.box.nonceLength);
+    const ephemeralKeyPair = nacl.box.keyPair();
+    const recipientNonce = nacl.randomBytes(nacl.box.nonceLength);
     recipients.forEach((recipient) => {
         // Generate a random nonce for each recipient
         // Encrypt the symmetric key with each recipient's public key
-        const publicKeyBase64 = tweetnacl_util_1.default.decodeBase64(recipient.encryptionPublicKeyBase64);
-        const encryptedSymmetricKey = tweetnacl_1.default.box(symmetricKey, recipientNonce, publicKeyBase64, ephemeralKeyPair.secretKey);
-        encryptedSymmetricKeys.push({ encryptedSymmetricKey: tweetnacl_util_1.default.encodeBase64(encryptedSymmetricKey), keyId: recipient.id });
+        const publicKeyBase64 = naclUtil.decodeBase64(recipient.encryptionPublicKeyBase64);
+        const encryptedSymmetricKey = nacl.box(symmetricKey, recipientNonce, publicKeyBase64, ephemeralKeyPair.secretKey);
+        encryptedSymmetricKeys.push({ encryptedSymmetricKey: naclUtil.encodeBase64(encryptedSymmetricKey), keyId: recipient.id });
         // Encrypt the message using the symmetric key
     });
-    const encryptedMessage = tweetnacl_1.default.secretbox(msgParamsUInt8Array, recipientNonce, symmetricKey);
+    const encryptedMessage = nacl.secretbox(msgParamsUInt8Array, recipientNonce, symmetricKey);
     const output = {
         version: 'x25519-xsalsa20-poly1305',
-        nonce: tweetnacl_util_1.default.encodeBase64(recipientNonce),
-        ephemPublicKey: tweetnacl_util_1.default.encodeBase64(ephemeralKeyPair.publicKey),
+        nonce: naclUtil.encodeBase64(recipientNonce),
+        ephemPublicKey: naclUtil.encodeBase64(ephemeralKeyPair.publicKey),
         recipients: encryptedSymmetricKeys.map((encryptedKey) => {
             return {
                 encrypted_Key: encryptedKey.encryptedSymmetricKey,
                 keyId: encryptedKey.keyId,
             };
         }),
-        ciphertext: tweetnacl_util_1.default.encodeBase64(encryptedMessage),
+        ciphertext: naclUtil.encodeBase64(encryptedMessage),
     };
     return output;
 }
-exports.encrypt = encrypt;
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?;:\'"()[]{}-+_=*/\\|@#$%&<>';
     let result = '';

@@ -1,4 +1,3 @@
-"use strict";
 /**
  * Copyright (c) 2022, Hypermine Pvt. Ltd.
  * All rights reserved.
@@ -13,10 +12,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const http_signature_zcap_invoke_1 = require("@digitalbazaar/http-signature-zcap-invoke");
+import { signCapabilityInvocation } from '@digitalbazaar/http-signature-zcap-invoke';
 // Authorization Capabilities via HTTP signatures
-class HypersignZCapHttpSigner {
+export default class HypersignZCapHttpSigner {
     // capabilityInvocationKey: any;
     constructor({ capabilityInvocationKey }) {
         this.capabilityInvocationKey = capabilityInvocationKey;
@@ -31,7 +29,7 @@ class HypersignZCapHttpSigner {
     // }
     signHTTP({ url, method, headers, encryptedObject, capabilityAction, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const signedHeader = yield (0, http_signature_zcap_invoke_1.signCapabilityInvocation)({
+            const signedHeader = yield signCapabilityInvocation({
                 url,
                 method,
                 headers,
@@ -43,4 +41,3 @@ class HypersignZCapHttpSigner {
         });
     }
 }
-exports.default = HypersignZCapHttpSigner;

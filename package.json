@@ -2,7 +2,8 @@
   "name": "@hypersign-protocol/hypersign-vault-client",
   "version": "1.0.0",
   "description": "",
-  "main": "build/index.js",
+  "exports": "./build/index.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "npm run format && npm run lint && rimraf build/ && tsc",

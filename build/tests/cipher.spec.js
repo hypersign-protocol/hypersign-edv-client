@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,16 +7,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const index_1 = require("../index");
-const key_spec_1 = require("./key.spec");
+import { HypersignCipher } from '../index';
+import { X25519KeyAgreementKeyPair, Ed25519Keypair, authenticationKey, hypersignDIDKeyResolverForEd25519KeyPair, hypersignDIDKeyResolverForX25519KeyPair } from './key.spec';
 function testwithed25519() {
     return __awaiter(this, void 0, void 0, function* () {
-        const keyAgreementKey = yield (0, key_spec_1.Ed25519Keypair)(key_spec_1.authenticationKey);
+        const keyAgreementKey = yield Ed25519Keypair(authenticationKey);
         console.log(keyAgreementKey);
         // This should work with both resolver hypersignDIDKeyResolverForEd25519KeyPair and hypersignDIDKeyResolverForX25519KeyPair
-        const hsCipher = new index_1.HypersignCipher({
-            keyResolver: key_spec_1.hypersignDIDKeyResolverForEd25519KeyPair,
+        const hsCipher = new HypersignCipher({
+            keyResolver: hypersignDIDKeyResolverForEd25519KeyPair,
             keyAgreementKey
         });
         const messsage = { 'foo': 'bar12312' };
@@ -29,10 +27,10 @@ function testwithed25519() {
 }
 function testwithex25519() {
     return __awaiter(this, void 0, void 0, function* () {
-        const keyAgreementKey = yield (0, key_spec_1.X25519KeyAgreementKeyPair)(key_spec_1.authenticationKey);
+        const keyAgreementKey = yield X25519KeyAgreementKeyPair(authenticationKey);
         // This should work with both resolver hypersignDIDKeyResolverForEd25519KeyPair and hypersignDIDKeyResolverForX25519KeyPair
-        const hsCipher = new index_1.HypersignCipher({
-            keyResolver: key_spec_1.hypersignDIDKeyResolverForX25519KeyPair,
+        const hsCipher = new HypersignCipher({
+            keyResolver: hypersignDIDKeyResolverForX25519KeyPair,
             keyAgreementKey
         });
         const messsage = { 'foo': 'bar12312' };

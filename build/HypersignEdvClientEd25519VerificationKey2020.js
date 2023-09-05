@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,22 +7,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const config_1 = __importDefault(require("./config"));
-const utils_1 = __importDefault(require("./utils"));
-const hsEncryptedDocument_1 = __importDefault(require("./hsEncryptedDocument"));
-const Types_1 = require("./Types");
-const hsCipher_1 = __importDefault(require("./hsCipher"));
-const hsZCapHttpSig_1 = __importDefault(require("./hsZCapHttpSig"));
-const Hmac_1 = __importDefault(require("./Hmac"));
-const IndexHelper_1 = require("./IndexHelper");
-class HypersignEdvClientEd25519VerificationKey2020 {
+import Config from './config';
+import Utils from './utils';
+import HypersignEncryptedDocument from './hsEncryptedDocument';
+import { HmacKeyTypes, KeyAgreementKeyTypes, } from './Types';
+import HypersignCipher from './hsCipher';
+import HypersignZCapHttpSigner from './hsZCapHttpSig';
+import Hmac from './Hmac';
+import { IndexHelper } from './IndexHelper';
+export default class HypersignEdvClientEd25519VerificationKey2020 {
     constructor({ keyResolver, url, ed25519VerificationKey2020, x25519KeyAgreementKey2020, shaHmacKey2020, }) {
         // optional parameters
-        this.edvsUrl = new URL(utils_1.default._sanitizeURL(url || config_1.default.Defaults.edvsBaseURl));
+        this.edvsUrl = new URL(Utils._sanitizeURL(url || Config.Defaults.edvsBaseURl));
         if (!this.edvsUrl.pathname.endsWith('/')) {
             this.edvsUrl.pathname += '/';
         }
@@ -33,16 +28,16 @@ class HypersignEdvClientEd25519VerificationKey2020 {
         this.keyResolver = keyResolver;
         this.ed25519VerificationKey2020 = ed25519VerificationKey2020;
         this.x25519KeyAgreementKey2020 = x25519KeyAgreementKey2020;
-        this.hsCipher = new hsCipher_1.default({ keyResolver: this.keyResolver, keyAgreementKey: x25519KeyAgreementKey2020 });
+        this.hsCipher = new HypersignCipher({ keyResolver: this.keyResolver, keyAgreementKey: x25519KeyAgreementKey2020 });
         this.shaHmacKey2020 = shaHmacKey2020
             ? shaHmacKey2020
             : {
                 id: ed25519VerificationKey2020.id,
-                type: Types_1.HmacKeyTypes.Sha256HmacKey2020,
+                type: HmacKeyTypes.Sha256HmacKey2020,
                 key: ed25519VerificationKey2020.privateKeyMultibase,
             };
         // always ed25519VerificationKey2020
-        this.hsHttpSigner = new hsZCapHttpSig_1.default({ capabilityInvocationKey: this.ed25519VerificationKey2020 });
+        this.hsHttpSigner = new HypersignZCapHttpSigner({ capabilityInvocationKey: this.ed25519VerificationKey2020 });
     }
     /**
      * Creates a new data vault for given configuration
@@ -59,10 +54,10 @@ class HypersignEdvClientEd25519VerificationKey2020 {
         return __awaiter(this, void 0, void 0, function* () {
             const edvConfig = {};
             edvConfig.controller = config.controller;
-            if (config.keyAgreementKey && !Types_1.KeyAgreementKeyTypes[config.keyAgreementKey.type]) {
+            if (config.keyAgreementKey && !KeyAgreementKeyTypes[config.keyAgreementKey.type]) {
                 throw new Error('Unsupported keyagreement type: ' + config.keyAgreementKey.type);
             }
-            if (config.hmac && !Types_1.HmacKeyTypes[config.hmac.type]) {
+            if (config.hmac && !HmacKeyTypes[config.hmac.type]) {
                 throw new Error('Unsupported hmac type: ' + config.hmac.type);
             }
             // Adding support for custom id
@@ -72,21 +67,21 @@ class HypersignEdvClientEd25519VerificationKey2020 {
             if (config.keyAgreementKey && config.hmac) {
                 edvConfig.keyAgreementKey = {
                     id: config.keyAgreementKey.id,
-                    type: Types_1.KeyAgreementKeyTypes[config.keyAgreementKey.type],
+                    type: KeyAgreementKeyTypes[config.keyAgreementKey.type],
                 };
                 edvConfig.hmac = {
                     id: config.hmac.id,
-                    type: Types_1.HmacKeyTypes[config.hmac.type],
+                    type: HmacKeyTypes[config.hmac.type],
                 };
             }
             else {
                 edvConfig.keyAgreementKey = {
                     id: this.x25519KeyAgreementKey2020.id,
-                    type: Types_1.KeyAgreementKeyTypes[this.x25519KeyAgreementKey2020.type],
+                    type: KeyAgreementKeyTypes[this.x25519KeyAgreementKey2020.type],
                 };
                 edvConfig.hmac = {
                     id: this.shaHmacKey2020.id,
-                    type: Types_1.HmacKeyTypes[this.shaHmacKey2020.type],
+                    type: HmacKeyTypes[this.shaHmacKey2020.type],
                 };
             }
             edvConfig.sequence = 0; // default values
@@ -99,7 +94,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 edvConfig.referenceId = config.referenceId;
             if (config.delegator)
                 edvConfig.delegator = config.delegator;
-            const edvRegisterURl = this.edvsUrl + config_1.default.APIs.edvAPI;
+            const edvRegisterURl = this.edvsUrl + Config.APIs.edvAPI;
             const method = 'POST';
             const headers = {
                 // digest signature
@@ -115,7 +110,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 encryptedObject: edvConfig,
                 capabilityAction: 'write',
             });
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvRegisterURl,
                 method: 'POST',
                 body: edvConfig,
@@ -139,11 +134,11 @@ class HypersignEdvClientEd25519VerificationKey2020 {
             // encrypt the document
             let finalIndex;
             if (indexs) {
-                const hmac = yield Hmac_1.default.create({
+                const hmac = yield Hmac.create({
                     key: this.shaHmacKey2020.key,
                     id: this.shaHmacKey2020.id,
                 });
-                const indexDoc = new IndexHelper_1.IndexHelper();
+                const indexDoc = new IndexHelper();
                 indexs.forEach((attr) => __awaiter(this, void 0, void 0, function* () {
                     indexDoc.ensureIndex({
                         attribute: attr.index,
@@ -157,7 +152,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 plainObject: document,
                 recipients,
             });
-            const hsEncDoc = new hsEncryptedDocument_1.default({
+            const hsEncDoc = new HypersignEncryptedDocument({
                 jwe,
                 encryptedData,
                 indexd: [finalIndex],
@@ -166,7 +161,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 sequence,
             });
             // form the http request header by signing the header
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+            const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
             const headers = {
                 // digest signature
                 // authorization header,
@@ -183,7 +178,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 capabilityAction: 'write',
             });
             // make the call to store
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvDocAddUrl,
                 method,
                 body: hsEncDoc.get(),
@@ -205,11 +200,11 @@ class HypersignEdvClientEd25519VerificationKey2020 {
             // encrypt the document
             let finalIndex;
             if (indexs) {
-                const hmac = yield Hmac_1.default.create({
+                const hmac = yield Hmac.create({
                     key: this.shaHmacKey2020.key,
                     id: this.shaHmacKey2020.id,
                 });
-                const indexDoc = new IndexHelper_1.IndexHelper();
+                const indexDoc = new IndexHelper();
                 indexs.forEach((attr) => __awaiter(this, void 0, void 0, function* () {
                     indexDoc.ensureIndex({
                         attribute: attr.index,
@@ -222,9 +217,9 @@ class HypersignEdvClientEd25519VerificationKey2020 {
             const { jwe } = yield this.hsCipher.encryptObject({
                 plainObject: document,
             });
-            const hsEncDoc = new hsEncryptedDocument_1.default({ jwe, indexd: [finalIndex], id: documentId, metadata, sequence });
+            const hsEncDoc = new HypersignEncryptedDocument({ jwe, indexd: [finalIndex], id: documentId, metadata, sequence });
             // form the http request header by signing the header
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document';
+            const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
             const headers = {
                 // digest signature
                 // authorization header,
@@ -241,7 +236,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 capabilityAction: 'write',
             });
             // make the call to store
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvDocAddUrl,
                 method,
                 body: hsEncDoc.get(),
@@ -259,7 +254,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
      */
     fetchDoc({ documentId, edvId, sequence, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
+            const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
             const method = 'GET';
             const headers = {
                 // digest signature
@@ -275,7 +270,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 encryptedObject: undefined,
                 capabilityAction: 'read',
             });
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvDocAddUrl,
                 method: 'GET',
                 headers: signedHeader,
@@ -294,7 +289,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 limit = 10;
             if (!page)
                 page = 1;
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/documents' + '?limit=' + limit + '&page=' + page;
+            const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/documents' + '?limit=' + limit + '&page=' + page;
             const method = 'GET';
             const headers = {
                 // digest signature
@@ -310,7 +305,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 encryptedObject: undefined,
                 capabilityAction: 'read',
             });
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvDocAddUrl,
                 method: 'GET',
                 headers: signedHeader,
@@ -320,7 +315,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
     }
     Query({ edvId, equals, has, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const hmac = yield Hmac_1.default.create({
+            const hmac = yield Hmac.create({
                 key: this.shaHmacKey2020.key,
                 id: this.shaHmacKey2020.id,
             });
@@ -328,13 +323,13 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 throw new Error('Either equals or has should be passed');
             if (equals && has)
                 throw new Error('Either equals or has should be passed');
-            const indexDoc = new IndexHelper_1.IndexHelper();
+            const indexDoc = new IndexHelper();
             const query = yield indexDoc.buildQuery({
                 hmac,
                 equals: equals ? equals : undefined,
                 has: has ? has : undefined,
             });
-            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId + '/query';
+            const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/query';
             const method = 'POST';
             const headers = {
                 // digest signature
@@ -350,7 +345,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 encryptedObject: query,
                 capabilityAction: 'write',
             });
-            const resp = yield utils_1.default._makeAPICall({
+            const resp = yield Utils._makeAPICall({
                 url: edvDocAddUrl,
                 method: 'POST',
                 headers: signedHeader,
@@ -365,4 +360,3 @@ class HypersignEdvClientEd25519VerificationKey2020 {
         });
     }
 }
-exports.default = HypersignEdvClientEd25519VerificationKey2020;

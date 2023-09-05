@@ -1,4 +1,3 @@
-"use strict";
 /**
  * Copyright (c) 2022, Hypermine Pvt. Ltd.
  * All rights reserved.
@@ -13,12 +12,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const axios_1 = __importDefault(require("axios"));
-class Utils {
+import axios from 'axios';
+export default class Utils {
     static _sanitizeURL(url) {
         if (url.endsWith('/')) {
             url = url.slice(0, -1);
@@ -28,7 +23,7 @@ class Utils {
     static _makeAPICall(params) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const resp = yield (0, axios_1.default)(params.url, {
+                const resp = yield axios(params.url, {
                     method: params.method,
                     data: params.body ? params.body : null,
                     headers: params.headers ? params.headers : null,
@@ -49,4 +44,3 @@ class Utils {
         });
     }
 }
-exports.default = Utils;
