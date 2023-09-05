@@ -24,15 +24,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -44,10 +35,10 @@ const canonicalize_1 = __importDefault(require("canonicalize"));
 const lru_memoize_1 = require("@digitalbazaar/lru-memoize");
 const split_string_1 = __importDefault(require("split-string"));
 const crypto = globalThis.crypto;
-const sha256 = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    const buf = yield crypto.subtle.digest('SHA-256', data);
+const sha256 = async (data) => {
+    const buf = await crypto.subtle.digest('SHA-256', data);
     return new Uint8Array(buf);
-});
+};
 const ATTRIBUTE_PREFIXES = ['content', 'meta'];
 function _assertHmac(hmac) {
     if (!(hmac &&
@@ -58,10 +49,8 @@ function _assertHmac(hmac) {
         throw new TypeError('"hmac" must be an object with "id", "sign", and "verify" properties.');
     }
 }
-function _hashString(str) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return sha256(new TextEncoder().encode(str));
-    });
+async function _hashString(str) {
+    return sha256(new TextEncoder().encode(str));
 }
 // `hashes` is an array of Uint8Arrays, each MUST have the same length
 function _joinHashes(hashes) {
@@ -129,238 +118,222 @@ class IndexHelper {
             this._prewarmCache({ attributes, hmac }).catch(() => { });
         }
     }
-    createEntry({ hmac, doc }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            _assertHmac(hmac);
-            const entry = {
-                hmac: {
-                    id: hmac.id,
-                    type: hmac.type,
-                },
-                sequence: doc.sequence,
-                attributes: yield this._buildBlindAttributes({ hmac, doc }),
-            };
-            return entry;
-        });
+    async createEntry({ hmac, doc }) {
+        _assertHmac(hmac);
+        const entry = {
+            hmac: {
+                id: hmac.id,
+                type: hmac.type,
+            },
+            sequence: doc.sequence,
+            attributes: await this._buildBlindAttributes({ hmac, doc }),
+        };
+        return entry;
     }
-    _buildBlindAttributes({ hmac, doc, equal, has }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const hashedAttributes = Array();
-            // get all matching indexes and corresponding attribute values
-            const { simpleMatches, compoundMatches, attributeValues } = this._getMatchingIndexes({ doc, equal, has });
-            if (simpleMatches.length === 0 && compoundMatches.length === 0) {
-                simpleMatches.push({ attribute: attributeValues.keys().next().value, unique: false });
+    async _buildBlindAttributes({ hmac, doc, equal, has }) {
+        const hashedAttributes = Array();
+        // get all matching indexes and corresponding attribute values
+        const { simpleMatches, compoundMatches, attributeValues } = this._getMatchingIndexes({ doc, equal, has });
+        if (simpleMatches.length === 0 && compoundMatches.length === 0) {
+            simpleMatches.push({ attribute: attributeValues.keys().next().value, unique: false });
+        }
+        // compute and store all hashed attributes in parallel
+        const hashedAttributeMap = new Map();
+        const hashPromises = Array();
+        for (const [name, valueSet] of attributeValues.entries()) {
+            // create a hashed set for each attribute name; it will hold the
+            // hashed attribute associated with each name+value pair
+            const hashedSet = new Set();
+            hashedAttributeMap.set(name, hashedSet);
+            for (const value of valueSet) {
+                // use an IIFE to push a promise onto `hashPromises` to await all
+                // promises in parallel and within IIFE add the resolved hashed
+                // attribute to the current attribute's `hashedSet`
+                hashPromises.push((async () => {
+                    hashedSet.add(await this._hashAttribute({ name, value }));
+                })());
             }
-            // compute and store all hashed attributes in parallel
-            const hashedAttributeMap = new Map();
-            const hashPromises = Array();
-            for (const [name, valueSet] of attributeValues.entries()) {
-                // create a hashed set for each attribute name; it will hold the
-                // hashed attribute associated with each name+value pair
-                const hashedSet = new Set();
-                hashedAttributeMap.set(name, hashedSet);
-                for (const value of valueSet) {
-                    // use an IIFE to push a promise onto `hashPromises` to await all
-                    // promises in parallel and within IIFE add the resolved hashed
-                    // attribute to the current attribute's `hashedSet`
-                    hashPromises.push((() => __awaiter(this, void 0, void 0, function* () {
-                        hashedSet.add(yield this._hashAttribute({ name, value }));
-                    }))());
-                }
+        }
+        await Promise.all(hashPromises);
+        // add all matching simple index hashed attributes and track simple
+        // attributes to avoid duplicating entries when processing compound
+        // indexes
+        const simpleAttributes = new Set();
+        for (const { attribute: name, unique } of simpleMatches) {
+            const hashedSet = hashedAttributeMap.get(name);
+            for (const hashed of hashedSet) {
+                hashedAttributes.push({ ...hashed, unique });
             }
-            yield Promise.all(hashPromises);
-            // add all matching simple index hashed attributes and track simple
-            // attributes to avoid duplicating entries when processing compound
-            // indexes
-            const simpleAttributes = new Set();
-            for (const { attribute: name, unique } of simpleMatches) {
+            simpleAttributes.add(name);
+        }
+        // compute and add all matching compound index hashed attributes
+        const compoundPromises = Array();
+        for (const { attributes: names, unique } of compoundMatches) {
+            /* Note: For each matching index, there are some number of matching
+                  attributes that need to be combinatorially spread. For example, for this
+                  index: `['content.a', 'content.b', 'content.c']`, there may be multiple
+                  values for each attribute such as `A` values for `content.a`, `B` values
+                  for `content.b`, and `C` values for `content.c`. Each combination these
+                  values will ultimately produce a new blinded attribute to add to `entry`.
+                  Combinations must also include partial ones, e.g., combinations of
+                  values for `content.a` alone as well as values for `content.a` and
+                  `content.b` without `content.c`. */
+            const combinations = Array();
+            let previous = [[]];
+            for (const name of names) {
                 const hashedSet = hashedAttributeMap.get(name);
+                if (!hashedSet) {
+                    // no values for current attribute name; no more entries to produce
+                    break;
+                }
+                // produce a new combination for every `hashed` value and every
+                // combination from the previous attribute
+                const next = Array();
                 for (const hashed of hashedSet) {
-                    hashedAttributes.push(Object.assign(Object.assign({}, hashed), { unique }));
-                }
-                simpleAttributes.add(name);
-            }
-            // compute and add all matching compound index hashed attributes
-            const compoundPromises = Array();
-            for (const { attributes: names, unique } of compoundMatches) {
-                /* Note: For each matching index, there are some number of matching
-                      attributes that need to be combinatorially spread. For example, for this
-                      index: `['content.a', 'content.b', 'content.c']`, there may be multiple
-                      values for each attribute such as `A` values for `content.a`, `B` values
-                      for `content.b`, and `C` values for `content.c`. Each combination these
-                      values will ultimately produce a new blinded attribute to add to `entry`.
-                      Combinations must also include partial ones, e.g., combinations of
-                      values for `content.a` alone as well as values for `content.a` and
-                      `content.b` without `content.c`. */
-                const combinations = Array();
-                let previous = [[]];
-                for (const name of names) {
-                    const hashedSet = hashedAttributeMap.get(name);
-                    if (!hashedSet) {
-                        // no values for current attribute name; no more entries to produce
-                        break;
-                    }
-                    // produce a new combination for every `hashed` value and every
-                    // combination from the previous attribute
-                    const next = Array();
-                    for (const hashed of hashedSet) {
-                        for (const combination of previous) {
-                            next.push([...combination, hashed]);
-                        }
-                    }
-                    combinations.push(...next);
-                    previous = next;
-                }
-                // now generate entries from every combination
-                for (const combination of combinations) {
-                    // skip generating an entry for this combination if it has just the
-                    // first attribute and an entry for it was already added
-                    if (combination.length === 1 && simpleAttributes.has(names[0])) {
-                        continue;
-                    }
-                    // use an IIFE to push a promise onto `compoundPromises` to await all
-                    // promises in parallel and within IIFE return hashed attribute to
-                    // blind and add to `entry` below
-                    compoundPromises.push((() => __awaiter(this, void 0, void 0, function* () {
-                        const attribute = yield this._hashCompoundAttribute({
-                            hashedAttributes: combination,
-                        });
-                        // an encrypted attribute is only unique for a compound index when
-                        // it contains a value for every attribute in the index
-                        attribute['unique'] = unique && combination.length === names.length;
-                        return attribute;
-                    }))());
-                }
-            }
-            hashedAttributes.push(...(yield Promise.all(compoundPromises)));
-            // blind all hashed attributes and return them
-            return Promise.all(hashedAttributes.map((hashedAttribute) => __awaiter(this, void 0, void 0, function* () { return this._blindHashedAttribute({ hmac, hashedAttribute }); })));
-        });
-    }
-    updateEntry({ hmac, doc }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            _assertHmac(hmac);
-            // get previously indexed entries to update
-            let { indexed = [] } = doc;
-            if (!Array.isArray(indexed)) {
-                throw new TypeError('"indexed" must be an array.');
-            }
-            // create new entry
-            const entry = yield this.createEntry({ hmac, doc });
-            // find existing entry in `indexed` by hmac ID and type
-            const i = indexed.findIndex((e) => e.hmac.id === hmac.id && e.hmac.type === hmac.type);
-            // replace or append new entry
-            indexed = indexed.slice();
-            if (i === -1) {
-                indexed.push(entry);
-            }
-            else {
-                indexed[i] = entry;
-            }
-            return indexed;
-        });
-    }
-    _hashAttribute({ name, value }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // canonicalize value to get consistent representation and hash
-            value = (0, canonicalize_1.default)(value);
-            const [hashedName, hashedValue] = yield Promise.all([_hashString(name), _hashString(value)]);
-            return { name: hashedName, value: hashedValue };
-        });
-    }
-    buildQuery({ hmac, equals, has }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            _assertHmac(hmac);
-            // validate params
-            if (equals === undefined && has === undefined) {
-                throw new Error('Either "equals" or "has" must be defined.');
-            }
-            if (equals !== undefined && has !== undefined) {
-                throw new Error('Only one of "equals" or "has" may be defined at once.');
-            }
-            if (equals !== undefined) {
-                if (Array.isArray(equals)) {
-                    if (!equals.every((x) => x && typeof x === 'object')) {
-                        throw new TypeError('"equals" must be an array of objects.');
+                    for (const combination of previous) {
+                        next.push([...combination, hashed]);
                     }
                 }
-                else if (!(equals && typeof equals === 'object')) {
-                    throw new TypeError('"equals" must be an object or an array of objects.');
-                }
+                combinations.push(...next);
+                previous = next;
             }
-            if (has !== undefined) {
-                if (Array.isArray(has)) {
-                    if (!has.every((x) => x && typeof x === 'string')) {
-                        throw new TypeError('"has" must be an array of strings.');
-                    }
+            // now generate entries from every combination
+            for (const combination of combinations) {
+                // skip generating an entry for this combination if it has just the
+                // first attribute and an entry for it was already added
+                if (combination.length === 1 && simpleAttributes.has(names[0])) {
+                    continue;
                 }
-                else if (typeof has !== 'string') {
-                    throw new TypeError('"has" must be a string or an array of strings.');
-                }
+                // use an IIFE to push a promise onto `compoundPromises` to await all
+                // promises in parallel and within IIFE return hashed attribute to
+                // blind and add to `entry` below
+                compoundPromises.push((async () => {
+                    const attribute = await this._hashCompoundAttribute({
+                        hashedAttributes: combination,
+                    });
+                    // an encrypted attribute is only unique for a compound index when
+                    // it contains a value for every attribute in the index
+                    attribute['unique'] = unique && combination.length === names.length;
+                    return attribute;
+                })());
             }
-            const query = {
-                index: hmac.id,
-                equals: Array(),
-                has: Array(),
-            };
-            if (equals) {
-                // normalize to array
-                if (!Array.isArray(equals)) {
-                    equals = [equals];
-                }
-                // blind all values in each `equal`
-                query.equals = yield Promise.all(equals.map((equal) => __awaiter(this, void 0, void 0, function* () {
-                    const result = {};
-                    const blinded = yield this._buildBlindAttributes({ hmac, equal });
-                    for (const { name, value } of blinded) {
-                        result[name] = value;
-                    }
-                    return result;
-                })));
-            }
-            else if (has !== undefined) {
-                // normalize to array
-                if (!Array.isArray(has)) {
-                    has = [has];
-                }
-                // blind every attribute name in `has`
-                query.has = (yield this._buildBlindAttributes({ hmac, has })).map(({ name }) => name);
-            }
-            return query;
-        });
+        }
+        hashedAttributes.push(...(await Promise.all(compoundPromises)));
+        // blind all hashed attributes and return them
+        return Promise.all(hashedAttributes.map(async (hashedAttribute) => this._blindHashedAttribute({ hmac, hashedAttribute })));
     }
-    _blindHashedAttribute({ hmac, hashedAttribute }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // salt values with key to prevent cross-key leakage
-            const saltedValue = yield sha256(_joinHashes([hashedAttribute.name, hashedAttribute.value]));
-            const [name, value] = yield Promise.all([this._blindData(hmac, hashedAttribute.name), this._blindData(hmac, saltedValue)]);
-            const blindAttribute = { name, value, unique: false };
-            if (hashedAttribute.unique) {
-                blindAttribute.unique = true;
-            }
-            return blindAttribute;
-        });
+    async updateEntry({ hmac, doc }) {
+        _assertHmac(hmac);
+        // get previously indexed entries to update
+        let { indexed = [] } = doc;
+        if (!Array.isArray(indexed)) {
+            throw new TypeError('"indexed" must be an array.');
+        }
+        // create new entry
+        const entry = await this.createEntry({ hmac, doc });
+        // find existing entry in `indexed` by hmac ID and type
+        const i = indexed.findIndex((e) => e.hmac.id === hmac.id && e.hmac.type === hmac.type);
+        // replace or append new entry
+        indexed = indexed.slice();
+        if (i === -1) {
+            indexed.push(entry);
+        }
+        else {
+            indexed[i] = entry;
+        }
+        return indexed;
     }
-    _hashCompoundAttribute({ hashedAttributes, length = hashedAttributes.length }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const selection = length === hashedAttributes.length ? hashedAttributes : hashedAttributes.slice(0, length);
-            const nameInput = _joinHashes(selection.map((x) => x.name));
-            const valueInput = _joinHashes(selection.map((x) => x.value));
-            const [name, value] = yield Promise.all([sha256(nameInput), sha256(valueInput)]);
-            return { name, value };
-        });
+    async _hashAttribute({ name, value }) {
+        // canonicalize value to get consistent representation and hash
+        value = (0, canonicalize_1.default)(value);
+        const [hashedName, hashedValue] = await Promise.all([_hashString(name), _hashString(value)]);
+        return { name: hashedName, value: hashedValue };
     }
-    _blindData(hmac, data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // convert value to Uint8Array and hash it
-            const signature = yield this._cachedHmac({ hmac, data });
-            if (typeof signature === 'string') {
-                // presume base64url-encoded
-                return signature;
+    async buildQuery({ hmac, equals, has }) {
+        _assertHmac(hmac);
+        // validate params
+        if (equals === undefined && has === undefined) {
+            throw new Error('Either "equals" or "has" must be defined.');
+        }
+        if (equals !== undefined && has !== undefined) {
+            throw new Error('Only one of "equals" or "has" may be defined at once.');
+        }
+        if (equals !== undefined) {
+            if (Array.isArray(equals)) {
+                if (!equals.every((x) => x && typeof x === 'object')) {
+                    throw new TypeError('"equals" must be an array of objects.');
+                }
             }
-            // base64url-encode Uint8Array signature
-            return base64url.encode(signature);
-        });
+            else if (!(equals && typeof equals === 'object')) {
+                throw new TypeError('"equals" must be an object or an array of objects.');
+            }
+        }
+        if (has !== undefined) {
+            if (Array.isArray(has)) {
+                if (!has.every((x) => x && typeof x === 'string')) {
+                    throw new TypeError('"has" must be an array of strings.');
+                }
+            }
+            else if (typeof has !== 'string') {
+                throw new TypeError('"has" must be a string or an array of strings.');
+            }
+        }
+        const query = {
+            index: hmac.id,
+            equals: Array(),
+            has: Array(),
+        };
+        if (equals) {
+            // normalize to array
+            if (!Array.isArray(equals)) {
+                equals = [equals];
+            }
+            // blind all values in each `equal`
+            query.equals = await Promise.all(equals.map(async (equal) => {
+                const result = {};
+                const blinded = await this._buildBlindAttributes({ hmac, equal });
+                for (const { name, value } of blinded) {
+                    result[name] = value;
+                }
+                return result;
+            }));
+        }
+        else if (has !== undefined) {
+            // normalize to array
+            if (!Array.isArray(has)) {
+                has = [has];
+            }
+            // blind every attribute name in `has`
+            query.has = (await this._buildBlindAttributes({ hmac, has })).map(({ name }) => name);
+        }
+        return query;
+    }
+    async _blindHashedAttribute({ hmac, hashedAttribute }) {
+        // salt values with key to prevent cross-key leakage
+        const saltedValue = await sha256(_joinHashes([hashedAttribute.name, hashedAttribute.value]));
+        const [name, value] = await Promise.all([this._blindData(hmac, hashedAttribute.name), this._blindData(hmac, saltedValue)]);
+        const blindAttribute = { name, value, unique: false };
+        if (hashedAttribute.unique) {
+            blindAttribute.unique = true;
+        }
+        return blindAttribute;
+    }
+    async _hashCompoundAttribute({ hashedAttributes, length = hashedAttributes.length }) {
+        const selection = length === hashedAttributes.length ? hashedAttributes : hashedAttributes.slice(0, length);
+        const nameInput = _joinHashes(selection.map((x) => x.name));
+        const valueInput = _joinHashes(selection.map((x) => x.value));
+        const [name, value] = await Promise.all([sha256(nameInput), sha256(valueInput)]);
+        return { name, value };
+    }
+    async _blindData(hmac, data) {
+        // convert value to Uint8Array and hash it
+        const signature = await this._cachedHmac({ hmac, data });
+        if (typeof signature === 'string') {
+            // presume base64url-encoded
+            return signature;
+        }
+        // base64url-encode Uint8Array signature
+        return base64url.encode(signature);
     }
     _getMatchingIndexes({ doc, equal, has }) {
         // build a map of `attribute name => set of values` whilst matching
@@ -394,7 +367,7 @@ class IndexHelper {
             matchFn = ({ attribute }) => attributes.includes(attribute);
         }
         const result = this._matchIndexes({ matchFn });
-        return Object.assign(Object.assign({}, result), { attributeValues });
+        return { ...result, attributeValues };
     }
     _matchIndexes({ matchFn }) {
         // any simple index that has a value defined for its attribute is a match
@@ -444,18 +417,16 @@ class IndexHelper {
         }
         return true;
     }
-    _prewarmCache({ attributes, hmac }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const promises = Array();
-            const compound = Array();
-            for (const [i, name] of attributes.entries()) {
-                const hashed = yield _hashString(name);
-                compound.push(hashed);
-                const data = i === 0 ? hashed : yield sha256(_joinHashes(compound));
-                promises.push(this._cachedHmac({ hmac, data }));
-            }
-            return Promise.all(promises);
-        });
+    async _prewarmCache({ attributes, hmac }) {
+        const promises = Array();
+        const compound = Array();
+        for (const [i, name] of attributes.entries()) {
+            const hashed = await _hashString(name);
+            compound.push(hashed);
+            const data = i === 0 ? hashed : await sha256(_joinHashes(compound));
+            promises.push(this._cachedHmac({ hmac, data }));
+        }
+        return Promise.all(promises);
     }
     _cachedHmac({ hmac, data }) {
         return this._cache.memoize({

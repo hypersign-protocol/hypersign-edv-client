@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -23,25 +14,23 @@ const key_spec_1 = require("./key.spec");
 //         privateKeyMultibase: 'zrv2gheftP7VGPVoaJ7TbxGCN7pVXescn9FudB4xpF2HMWyjvzHuGVyPAb1NUeUGqqMxfHxgHiuLtR3pN5xyp8WLHR4',
 //     }
 // }
-function test() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const keypair = yield (0, key_spec_1.Ed25519Keypair)();
-        const hsCipher = new hsZCapHttpSig_1.default({ capabilityInvocationKey: keypair });
-        const BASE_URL = 'http://localhost:3001';
-        const edvId = '62473c97-283c-4369-832e-587778255611';
-        const url = `${BASE_URL}/api/v1/edvs/${edvId}/docs`;
-        const signedHeader = yield hsCipher.signHTTP({
-            url,
-            method: 'POST',
-            headers: {
-                controller: keypair.controller,
-                vermethodid: keypair.id,
-                date: new Date().toUTCString()
-            },
-            encryptedObject: { 'foo': 'bar' },
-            capabilityAction: 'write'
-        });
-        console.log(signedHeader);
+async function test() {
+    const keypair = await (0, key_spec_1.Ed25519Keypair)();
+    const hsCipher = new hsZCapHttpSig_1.default({ capabilityInvocationKey: keypair });
+    const BASE_URL = 'http://localhost:3001';
+    const edvId = '62473c97-283c-4369-832e-587778255611';
+    const url = `${BASE_URL}/api/v1/edvs/${edvId}/docs`;
+    const signedHeader = await hsCipher.signHTTP({
+        url,
+        method: 'POST',
+        headers: {
+            controller: keypair.controller,
+            vermethodid: keypair.id,
+            date: new Date().toUTCString()
+        },
+        encryptedObject: { 'foo': 'bar' },
+        capabilityAction: 'write'
     });
+    console.log(signedHeader);
 }
 test();
