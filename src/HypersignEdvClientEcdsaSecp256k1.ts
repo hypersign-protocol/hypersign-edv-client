@@ -22,7 +22,7 @@ import {
 } from './Types';
 import web3 from 'web3';
 
-const ethUtil = require('ethereumjs-util');
+import * as ethUtil from 'ethereumjs-util';
 
 // Path: src/hsEdvClient.ts
 import crypto from 'crypto';
