@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,16 +7,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const index_1 = require("../index");
-const key_spec_1 = require("./key.spec");
-const x25519_key_agreement_key_2020_1 = require("@digitalbazaar/x25519-key-agreement-key-2020");
+import { HypersignEdvClient } from '../index';
+import { Ed25519Keypair, authenticationKey, hypersignDIDKeyResolverForEd25519KeyPair } from './key.spec';
+import { X25519KeyAgreementKey2020 } from '@digitalbazaar/x25519-key-agreement-key-2020';
 function createClient() {
     return __awaiter(this, void 0, void 0, function* () {
         const url = 'http://localhost:3001';
-        const ed25519Keypair = yield (0, key_spec_1.Ed25519Keypair)(key_spec_1.authenticationKey);
-        const x25519KeyPair = x25519_key_agreement_key_2020_1.X25519KeyAgreementKey2020.fromEd25519VerificationKey2020(ed25519Keypair);
-        return (0, index_1.HypersignEdvClient)({ keyResolver: key_spec_1.hypersignDIDKeyResolverForEd25519KeyPair, url, invocationKeyPair: ed25519Keypair, keyagreementKeyPair: x25519KeyPair });
+        const ed25519Keypair = yield Ed25519Keypair(authenticationKey);
+        const x25519KeyPair = X25519KeyAgreementKey2020.fromEd25519VerificationKey2020(ed25519Keypair);
+        return HypersignEdvClient({ keyResolver: hypersignDIDKeyResolverForEd25519KeyPair, url, invocationKeyPair: ed25519Keypair, keyagreementKeyPair: x25519KeyPair });
     });
 }
 function register() {

@@ -1,4 +1,3 @@
-"use strict";
 // Credits: digitalbazar
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -9,15 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.IndexHelper = void 0;
 const base64url = require('base64url-universal');
-const canonicalize_1 = __importDefault(require("canonicalize"));
+import canonicalize from 'canonicalize';
 const { LruCache } = require('@digitalbazaar/lru-memoize');
-const split_string_1 = __importDefault(require("split-string"));
+import split from 'split-string';
 const crypto = globalThis.crypto;
 const sha256 = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const buf = yield crypto.subtle.digest('SHA-256', data);
@@ -51,7 +45,7 @@ function _joinHashes(hashes) {
     }
     return joined;
 }
-class IndexHelper {
+export class IndexHelper {
     constructor() {
         this.indexes = new Map();
         this.compoundIndexes = new Map();
@@ -238,7 +232,7 @@ class IndexHelper {
     _hashAttribute({ name, value }) {
         return __awaiter(this, void 0, void 0, function* () {
             // canonicalize value to get consistent representation and hash
-            value = (0, canonicalize_1.default)(value);
+            value = canonicalize(value);
             const [hashedName, hashedValue] = yield Promise.all([_hashString(name), _hashString(value)]);
             return { name: hashedName, value: hashedValue };
         });
@@ -455,7 +449,7 @@ class IndexHelper {
         return value;
     }
     _parseAttribute(attribute) {
-        const keys = (0, split_string_1.default)(attribute);
+        const keys = split(attribute);
         if (keys.length === 0) {
             throw new Error(`Invalid attribute "${attribute}"; it must be of the form ` + '"content.foo.bar".');
         }
@@ -466,4 +460,3 @@ class IndexHelper {
         return keys;
     }
 }
-exports.IndexHelper = IndexHelper;

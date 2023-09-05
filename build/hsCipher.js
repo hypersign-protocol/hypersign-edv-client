@@ -1,4 +1,3 @@
-"use strict";
 /**
  * Copyright (c) 2022, Hypermine Pvt. Ltd.
  * All rights reserved.
@@ -13,29 +12,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
 // TODO: Remove unnecessary codes
-const minimal_cipher_1 = require("@digitalbazaar/minimal-cipher");
-const x25519_key_agreement_key_2020_1 = require("@digitalbazaar/x25519-key-agreement-key-2020");
-const Types_1 = require("./Types");
-const ed25519_verification_key_2020_1 = require("@digitalbazaar/ed25519-verification-key-2020");
-const HypersignEdvClientEcdsaSecp256k1_1 = require("./HypersignEdvClientEcdsaSecp256k1");
-class HypersignCipher {
+import { Cipher } from '@digitalbazaar/minimal-cipher';
+import { X25519KeyAgreementKey2020 } from '@digitalbazaar/x25519-key-agreement-key-2020';
+import { VerificationKeyTypes, KeyAgreementKeyTypes } from './Types';
+import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
+import { encrypt, multibaseBase58ToBase64 } from './HypersignEdvClientEcdsaSecp256k1';
+export default class HypersignCipher {
     constructor({ keyResolver, keyAgreementKey }) {
         this.keyResolver = keyResolver;
-        this.cipher = new minimal_cipher_1.Cipher();
+        this.cipher = new Cipher();
         this.keyAgreementKey = keyAgreementKey;
     }
     _getX25519KeyAgreementKey(keyAgreementKey = this.keyAgreementKey) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (keyAgreementKey.type === Types_1.VerificationKeyTypes.Ed25519VerificationKey2020) {
-                const ed25519KeyPair = yield ed25519_verification_key_2020_1.Ed25519VerificationKey2020.generate(Object.assign({}, keyAgreementKey));
-                const keyAgreementKeyPair = x25519_key_agreement_key_2020_1.X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({
+            if (keyAgreementKey.type === VerificationKeyTypes.Ed25519VerificationKey2020) {
+                const ed25519KeyPair = yield Ed25519VerificationKey2020.generate(Object.assign({}, keyAgreementKey));
+                const keyAgreementKeyPair = X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({
                     keyPair: ed25519KeyPair,
                 });
                 return keyAgreementKeyPair;
             }
-            else if (keyAgreementKey.type === Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
+            else if (keyAgreementKey.type === KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
                 return keyAgreementKey;
             }
             else {
@@ -47,15 +45,15 @@ class HypersignCipher {
     _getX25519KeyAgreementResolver(keyResolver = this.keyResolver, id) {
         return __awaiter(this, void 0, void 0, function* () {
             const keypairObj = yield keyResolver({ id });
-            if (keypairObj.type === Types_1.VerificationKeyTypes.Ed25519VerificationKey2020) {
-                const keyAgreementKeyPair = x25519_key_agreement_key_2020_1.X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({
+            if (keypairObj.type === VerificationKeyTypes.Ed25519VerificationKey2020) {
+                const keyAgreementKeyPair = X25519KeyAgreementKey2020.fromEd25519VerificationKey2020({
                     keyPair: keypairObj,
                 });
                 return () => __awaiter(this, void 0, void 0, function* () {
                     return keyAgreementKeyPair;
                 });
             }
-            else if (keypairObj.type === Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
+            else if (keypairObj.type === KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
                 return keyResolver;
             }
             else {
@@ -70,7 +68,7 @@ class HypersignCipher {
                 publicKeyMultibase: '',
             };
             keyPair.publicKeyMultibase = pubkey;
-            const keyAgreementKeyPair = x25519_key_agreement_key_2020_1.X25519KeyAgreementKey2020.from({
+            const keyAgreementKeyPair = X25519KeyAgreementKey2020.from({
                 publicKeyMultibase: keyPair.publicKeyMultibase,
                 id,
             });
@@ -93,7 +91,7 @@ class HypersignCipher {
     }
     _createParticipants(recipients) {
         return recipients.map((recipient) => {
-            if (recipient.type === Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
+            if (recipient.type === KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
                 const pubkey = recipient.id.split('#')[1];
                 const id = recipient.id.split('#')[0];
                 let keyPair = {
@@ -109,7 +107,7 @@ class HypersignCipher {
                     },
                 };
             }
-            else if (recipient.type === Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKeyEIP5630) {
+            else if (recipient.type === KeyAgreementKeyTypes.X25519KeyAgreementKeyEIP5630) {
                 return {
                     header: {
                         kid: recipient.id.split('#')[0] + '#' + recipient.id.split('#')[1],
@@ -129,11 +127,11 @@ class HypersignCipher {
                 var _a;
                 if (((_a = recipient.header) === null || _a === void 0 ? void 0 : _a.alg) === 'x25519-xsalsa20-poly1305') {
                     const publicKey = recipient.header.kid.split('#')[1];
-                    const encryptionPublicKeyBase64 = (0, HypersignEdvClientEcdsaSecp256k1_1.multibaseBase58ToBase64)(publicKey);
+                    const encryptionPublicKeyBase64 = multibaseBase58ToBase64(publicKey);
                     recipient['encryptionPublicKeyBase64'] = encryptionPublicKeyBase64;
                     return {
                         id: recipient.header.kid,
-                        type: Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKeyEIP5630,
+                        type: KeyAgreementKeyTypes.X25519KeyAgreementKeyEIP5630,
                         encryptionPublicKeyBase64,
                     };
                 }
@@ -172,7 +170,7 @@ class HypersignCipher {
                 }
                 return value;
             });
-            const encryptedData = (0, HypersignEdvClientEcdsaSecp256k1_1.encrypt)(cannonizeString, Xpoly1305Recipient);
+            const encryptedData = encrypt(cannonizeString, Xpoly1305Recipient);
             return { jwe, encryptedData };
         });
     }
@@ -184,4 +182,3 @@ class HypersignCipher {
         });
     }
 }
-exports.default = HypersignCipher;
