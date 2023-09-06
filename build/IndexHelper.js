@@ -12,13 +12,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.IndexHelper = void 0;
-const base64url = require('base64url-universal');
+const base64url_universal_1 = __importDefault(require("base64url-universal"));
 const canonicalize_1 = __importDefault(require("canonicalize"));
-const { LruCache } = require('@digitalbazaar/lru-memoize');
+const lru_memoize_1 = require("@digitalbazaar/lru-memoize");
 const split_string_1 = __importDefault(require("split-string"));
-const crypto = globalThis.crypto;
+const node_crypto_1 = __importDefault(require("node:crypto"));
+const crypto = ((_a = globalThis.crypto) === null || _a === void 0 ? void 0 : _a.subtle) ? globalThis.crypto : node_crypto_1.default.webcrypto;
 const sha256 = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const buf = yield crypto.subtle.digest('SHA-256', data);
     return new Uint8Array(buf);
@@ -55,7 +57,7 @@ class IndexHelper {
     constructor() {
         this.indexes = new Map();
         this.compoundIndexes = new Map();
-        this._cache = new LruCache({
+        this._cache = new lru_memoize_1.LruCache({
             // each entry size ~64 bytes, 1000 entries ~= 64KiB
             max: 1000,
         });
@@ -334,7 +336,7 @@ class IndexHelper {
                 return signature;
             }
             // base64url-encode Uint8Array signature
-            return base64url.encode(signature);
+            return base64url_universal_1.default.encode(signature);
         });
     }
     _getMatchingIndexes({ doc, equal, has }) {
@@ -434,7 +436,7 @@ class IndexHelper {
     }
     _cachedHmac({ hmac, data }) {
         return this._cache.memoize({
-            key: `${encodeURIComponent(hmac.id)}:${base64url.encode(data)}`,
+            key: `${encodeURIComponent(hmac.id)}:${base64url_universal_1.default.encode(data)}`,
             fn: () => hmac.sign({ data }),
         });
     }

@@ -59,6 +59,9 @@ class HypersignEdvClientEd25519VerificationKey2020 {
         return __awaiter(this, void 0, void 0, function* () {
             const edvConfig = {};
             edvConfig.controller = config.controller;
+            if (config.edvId) {
+                edvConfig.id = config.edvId;
+            }
             if (config.keyAgreementKey && !Types_1.KeyAgreementKeyTypes[config.keyAgreementKey.type]) {
                 throw new Error('Unsupported keyagreement type: ' + config.keyAgreementKey.type);
             }

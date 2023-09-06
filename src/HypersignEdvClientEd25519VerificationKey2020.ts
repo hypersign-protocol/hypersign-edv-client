@@ -94,7 +94,9 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
   }) {
     const edvConfig: IDataVaultConfiguration = {} as IDataVaultConfiguration;
     edvConfig.controller = config.controller;
-
+    if (config.edvId) {
+      edvConfig.id = config.edvId;
+    }
     if (config.keyAgreementKey && !KeyAgreementKeyTypes[config.keyAgreementKey.type]) {
       throw new Error('Unsupported keyagreement type: ' + config.keyAgreementKey.type);
     }

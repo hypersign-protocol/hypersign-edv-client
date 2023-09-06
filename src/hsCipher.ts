@@ -58,7 +58,7 @@ export default class HypersignCipher {
 
   private async resolver({ id }) {
     const pubkey = id.split('#')[1];
-    let keyPair = {
+    const keyPair = {
       publicKeyMultibase: '',
     };
     keyPair.publicKeyMultibase = pubkey;
@@ -90,7 +90,7 @@ export default class HypersignCipher {
       if (recipient.type === KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
         const pubkey = recipient.id.split('#')[1];
         const id = recipient.id.split('#')[0];
-        let keyPair = {
+        const keyPair = {
           publicKeyMultibase: '',
         };
         keyPair.publicKeyMultibase = pubkey;

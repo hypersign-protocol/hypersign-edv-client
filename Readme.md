@@ -494,6 +494,7 @@ const res=vault.registerEdv(config)
 ## Indexing Strategies :
 
 - Hmac Blinding : This is a technique to index the data without revealing the data. This is done by using a secret key to generate a HMAC of the data and then using the HMAC as the index. This way the data is not revealed but can be searched. [More](https://identity.foundation/edv-spec/#creating-encrypted-indexes)
+
 ## Credit:
 
 This repo is inspired by https://github.com/digitalbazaar/edv-client repo. Big shout out to them who who has been working on helping user gain control of their identity and data.

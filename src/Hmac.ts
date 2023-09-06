@@ -3,9 +3,10 @@
  * Author: Pratap Mridha (Github @pratap2018)
  */
 
-const base64url = require('base64url-universal');
+import base64url from 'base64url-universal';
+import nodecrypto from 'node:crypto';
 
-const crypto = globalThis.crypto.subtle;
+const crypto = globalThis.crypto?.subtle ? globalThis.crypto.subtle : nodecrypto.webcrypto.subtle;
 
 export default class Hmac {
   id: string;

@@ -1,11 +1,12 @@
 // Credits: digitalbazar
 
-const base64url = require('base64url-universal');
+import base64url from 'base64url-universal';
 import canonicalize from 'canonicalize';
-const { LruCache } = require('@digitalbazaar/lru-memoize');
+import { LruCache } from '@digitalbazaar/lru-memoize';
 import split from 'split-string';
+import nodecryptos from 'node:crypto';
 
-const crypto = globalThis.crypto;
+const crypto = globalThis.crypto?.subtle ? globalThis.crypto : nodecryptos.webcrypto;
 
 const sha256 = async (data) => {
   const buf = await crypto.subtle.digest('SHA-256', data);

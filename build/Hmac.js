@@ -12,9 +12,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-const base64url = require('base64url-universal');
-const crypto = globalThis.crypto.subtle;
+const base64url_universal_1 = __importDefault(require("base64url-universal"));
+const node_crypto_1 = __importDefault(require("node:crypto"));
+const crypto = ((_a = globalThis.crypto) === null || _a === void 0 ? void 0 : _a.subtle) ? globalThis.crypto.subtle : node_crypto_1.default.webcrypto.subtle;
 class Hmac {
     /**
      * @param {string} id
@@ -39,7 +44,7 @@ class Hmac {
             const type = 'Sha256HmacKey2019';
             const algorithm = 'HS256';
             const extractable = true;
-            const secret = base64url.decode(key);
+            const secret = base64url_universal_1.default.decode(key);
             key = yield crypto.importKey('raw', secret, { name: 'HMAC', hash: 'SHA-256' }, extractable, ['sign', 'verify']);
             return new Hmac({ id, type, algorithm, key });
         });
@@ -48,13 +53,13 @@ class Hmac {
         return __awaiter(this, void 0, void 0, function* () {
             const key = this.key;
             const signature = new Uint8Array(yield crypto.sign(key.algorithm, key, data));
-            return base64url.encode(signature);
+            return base64url_universal_1.default.encode(signature);
         });
     }
     verify({ data, signature }) {
         return __awaiter(this, void 0, void 0, function* () {
             const key = this.key;
-            signature = base64url.decode(signature);
+            signature = base64url_universal_1.default.decode(signature);
             return crypto.verify(key.algorithm, key, signature, data);
         });
     }

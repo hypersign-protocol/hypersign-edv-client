@@ -66,7 +66,7 @@ class HypersignCipher {
     resolver({ id }) {
         return __awaiter(this, void 0, void 0, function* () {
             const pubkey = id.split('#')[1];
-            let keyPair = {
+            const keyPair = {
                 publicKeyMultibase: '',
             };
             keyPair.publicKeyMultibase = pubkey;
@@ -96,7 +96,7 @@ class HypersignCipher {
             if (recipient.type === Types_1.KeyAgreementKeyTypes.X25519KeyAgreementKey2020) {
                 const pubkey = recipient.id.split('#')[1];
                 const id = recipient.id.split('#')[0];
-                let keyPair = {
+                const keyPair = {
                     publicKeyMultibase: '',
                 };
                 keyPair.publicKeyMultibase = pubkey;
