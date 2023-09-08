@@ -367,5 +367,13 @@ class HypersignEdvClientEd25519VerificationKey2020 {
             throw new Error('Method not implemented');
         });
     }
+    decryptObject({ jwe, keyAgreementKey }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.hsCipher.decryptObject({
+                jwe,
+                keyAgreementKey,
+            });
+        });
+    }
 }
 exports.default = HypersignEdvClientEd25519VerificationKey2020;

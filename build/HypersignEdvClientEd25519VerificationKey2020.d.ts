@@ -112,5 +112,9 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
     deleteDoc({ documentId }: {
         documentId: any;
     }): Promise<void>;
+    decryptObject({ jwe, keyAgreementKey }: {
+        jwe: any;
+        keyAgreementKey: any;
+    }): Promise<object>;
 }
 //# sourceMappingURL=HypersignEdvClientEd25519VerificationKey2020.d.ts.map

@@ -467,4 +467,11 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
   public async deleteDoc({ documentId }) {
     throw new Error('Method not implemented');
   }
+
+  public async decryptObject({ jwe, keyAgreementKey }) {
+    return this.hsCipher.decryptObject({
+      jwe,
+      keyAgreementKey,
+    });
+  }
 }
