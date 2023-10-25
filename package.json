@@ -1,15 +1,16 @@
 {
-  "name": "hypersign-edv-client",
+  "name": "@hypersign-protocol/hypersign-vault-client",
   "version": "1.0.0",
   "description": "",
-  "main": "build/src/index.js",
+  "main": "build/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "npm run format && npm run lint && rimraf build/ && tsc",
     "start": "npm run build && node build/index.js",
     "test": "npm run build && node build/tests/edv.spec.js",
     "lint": "eslint src/**/*.ts",
-    "format": "pretty-quick --no-restage"
+    "format": "pretty-quick --no-restage",
+    "doc": "typedoc --out docs src"
   },
   "keywords": [],
   "author": "",
@@ -22,26 +23,38 @@
     "@digitalbazaar/http-client": "^3.2.0",
     "@digitalbazaar/http-signature-zcap-invoke": "^5.0.3",
     "@digitalbazaar/http-signature-zcap-verify": "^11.1.0",
+    "@digitalbazaar/lru-memoize": "^2.2.0",
     "@digitalbazaar/minimal-cipher": "^4.0.2",
     "@digitalbazaar/x25519-key-agreement-key-2020": "^2.1.0",
     "@digitalbazaar/zcap": "^9.0.0",
+    "@metamask/eth-sig-util": "^5.0.2",
     "axios": "^1.2.1",
+    "base58-universal": "^2.0.0",
+    "base64url-universal": "^1.1.0",
+    "canonicalize": "^1.0.8",
+    "crypto": "^1.0.1",
     "crypto-ld": "^6.0.0",
+    "ethereumjs-util": "^7.1.5",
     "hs-ssi-sdk": "^6.2.0",
-    "security-context": "^4.0.0"
+    "multibase": "^4.0.6",
+    "security-context": "^4.0.0",
+    "split-string": "^6.1.0",
+    "tweetnacl": "^1.0.3",
+    "web3": "^1.9.0"
   },
   "devDependencies": {
     "@types/node": "^18.11.13",
     "@typescript-eslint/eslint-plugin": "^5.46.1",
     "@typescript-eslint/parser": "^5.46.1",
-    "eslint": "^8.29.0",
-    "eslint-config-prettier": "^8.5.0",
+    "eslint": "^7",
+    "eslint-config-prettier": "^7",
     "eslint-plugin-prettier": "^4.2.1",
     "nodemon": "^2.0.20",
     "prettier": "^2.8.1",
     "pretty-quick": "^3.1.3",
     "rimraf": "^3.0.2",
     "ts-node": "^10.9.1",
+    "typedoc": "^0.24.8",
     "typescript": "^4.9.4"
   }
 }

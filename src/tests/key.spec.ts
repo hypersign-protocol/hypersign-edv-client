@@ -24,6 +24,7 @@ export  async function X25519KeyAgreementKeyPair(key = authenticationKey){
 }
 
 export const hypersignDIDKeyResolverForEd25519KeyPair = async ({id}) => {
+  id
     // TODO: The id passed here is a verificationmethodId, we can query the DID document to fetch ed25519 authentication keys
     // Then convert ed25519 pair into X25519KeyAgreementKey2020 , so let's mock it. 
   
@@ -46,6 +47,7 @@ export const hypersignDIDKeyResolverForEd25519KeyPair = async ({id}) => {
 // It takes verificaiton method as input and returns 
 // This method will not have privat ekey.
 export const hypersignDIDKeyResolverForX25519KeyPair = async ({id}) => {
+  id
     // TODO: The id passed here is a verificationmethodId, we can query the DID document to fetch ed25519 authentication keys
     // Then convert ed25519 pair into X25519KeyAgreementKey2020 , so let's mock it. 
   
