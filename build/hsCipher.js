@@ -147,6 +147,7 @@ class HypersignCipher {
     encryptObject({ plainObject, recipients = [], keyResolver, keyAgreementKey = this.keyAgreementKey, }) {
         return __awaiter(this, void 0, void 0, function* () {
             // worng way of doing it
+            console.log('keyAgreementKey', keyAgreementKey);
             const x25519keyAgreementKey = yield this._getX25519KeyAgreementKey(keyAgreementKey);
             let allRecipient;
             if (recipients.length === 0 && x25519keyAgreementKey) {

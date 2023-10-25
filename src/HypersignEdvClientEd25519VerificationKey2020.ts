@@ -157,7 +157,7 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
       capabilityAction: 'write',
     });
 
-    const resp: IDataVaultConfiguration = await Utils._makeAPICall({
+    const resp = await Utils._makeAPICall({
       url: edvRegisterURl,
       method: 'POST',
       body: edvConfig,
@@ -165,7 +165,9 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
     });
 
     // attaching the newly created edv id
-    edvConfig.id = resp.id;
+    console.log(resp);
+
+    edvConfig.id = resp.vault.id;
     return edvConfig;
   }
 

@@ -228,7 +228,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
       'Authorization'
     ] = `Signature keyId="${this.verificationMethod.id}",algorithm="sha256-eth-personalSign",headers="${signedHeaders}",signature="${base64}"`;
 
-    const resp: IDataVaultConfiguration = await Utils._makeAPICall({
+    const resp = await Utils._makeAPICall({
       url: edvRegisterURl,
       method: 'POST',
       body: edvConfig,
@@ -236,7 +236,7 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     });
 
     // attaching the newly created edv id
-    edvConfig.id = resp.id;
+    edvConfig.id = resp.vault.id;
     return edvConfig;
   }
 
