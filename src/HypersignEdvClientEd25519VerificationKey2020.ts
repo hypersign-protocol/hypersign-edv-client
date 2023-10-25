@@ -193,8 +193,8 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
     sequence?: number;
     metadata?: object;
     edvId: string;
-    recipients?: Array<IEncryptionRecipents>;
-    indexs?: Array<{ index: String; unique: boolean }>;
+    recipients: Array<IEncryptionRecipents>;
+    indexs: Array<{ index: String; unique: boolean }>;
   }): Promise<IResponse> {
     // encrypt the document
     let finalIndex;

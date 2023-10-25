@@ -524,8 +524,8 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
     sequence?: number;
     edvId: string;
     metadata?: object;
-    recipients?: Array<any>;
-    indexs?: Array<{ index: String; unique: boolean }>;
+    recipients: Array<any>;
+    indexs: Array<{ index: String; unique: boolean }>;
   }): Promise<IResponse> {
     if (recipients) {
       if (!Array.isArray(recipients)) {

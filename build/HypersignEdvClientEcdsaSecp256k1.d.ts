@@ -48,8 +48,8 @@ export default class HypersignEdvClientEcdsaSecp256k1 {
         sequence?: number;
         edvId: string;
         metadata?: object;
-        recipients?: Array<any>;
-        indexs?: Array<{
+        recipients: Array<any>;
+        indexs: Array<{
             index: String;
             unique: boolean;
         }>;
