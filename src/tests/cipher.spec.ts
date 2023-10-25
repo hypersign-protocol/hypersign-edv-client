@@ -11,7 +11,7 @@ async function testwithed25519(){
       keyAgreementKey
     })
     const messsage = { 'foo': 'bar12312' }
-    const jwe  = await hsCipher.encryptObject({ plainObject: messsage});
+    const {jwe}  = await hsCipher.encryptObject({ plainObject: messsage});
     console.log(jwe)
 
     const plainobject  = await hsCipher.decryptObject({jwe});
@@ -26,7 +26,7 @@ async function testwithex25519(){
     keyAgreementKey
   })
   const messsage = { 'foo': 'bar12312' }
-  const jwe  = await hsCipher.encryptObject({ plainObject: messsage});
+  const {jwe}  = await hsCipher.encryptObject({ plainObject: messsage});
   console.log(jwe)
 
   const plainobject  = await hsCipher.decryptObject({jwe});

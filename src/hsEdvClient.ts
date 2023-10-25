@@ -4,266 +4,100 @@
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
 
-import Config from './config';
-import Utils from './utils';
-import HypersignEncryptedDocument from './hsEncryptedDocument';
-import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
-import { IDataVaultConfiguration, HmacKeyTypes, KeyAgreementKeyTypes } from './hsEdvDataModels';
+import HypersignEdvClientEd25519VerificationKey2020 from './HypersignEdvClientEd25519VerificationKey2020';
+import { KeyResolver } from './Types';
 
-import HypersignCipher from './hsCipher';
-import HypersignZCapHttpSigner from './hsZCapHttpSig';
-export default class HypersignEdvClient {
-  private edvsUrl: string;
-  private keyResolver: Function;
-  private hsCipher: HypersignCipher;
-  private hsHttpSigner: HypersignZCapHttpSigner;
-  private ed25519VerificationKey2020: Ed25519VerificationKey2020;
-  constructor({
-    keyResolver,
-    url,
-    ed25519VerificationKey2020,
-  }: {
-    keyResolver: Function;
-    url?: string;
-    ed25519VerificationKey2020: Ed25519VerificationKey2020;
-  }) {
-    // optional parameters
-    this.edvsUrl = Utils._sanitizeURL(url || Config.Defaults.edvsBaseURl);
-    this.keyResolver = keyResolver;
-    this.ed25519VerificationKey2020 = ed25519VerificationKey2020;
-    this.hsCipher = new HypersignCipher({ keyResolver: this.keyResolver, keyAgreementKey: this.ed25519VerificationKey2020 });
-    this.hsHttpSigner = new HypersignZCapHttpSigner({ keyAgreementKey: this.ed25519VerificationKey2020 });
-  }
+import HypersignEdvClientEcdsaSecp256k1 from './HypersignEdvClientEcdsaSecp256k1';
 
-  /**
-   * Creates a new data vault for given configuration
-   * @param edvId Optional edv id
-   * @param invoker Optional invoker did
-   * @param delegator Optional delegator did
-   * @param referenceId Optional referenceId for data vault
-   * @param controller controller did
-   * @param keyAgreementKey keyAgreementKey
-   * @param hmac hmac
-   * @returns newly created data vault configuration
-   */
-  public async registerEdv(config: {
-    edvId?: string;
-    invoker?: string;
-    delegator?: string;
-    referenceId?: string;
-    controller: string;
-    keyAgreementKey: { id: string; type: string };
-    hmac: { id: string; type: string };
-  }) {
-    const edvConfig: IDataVaultConfiguration = {} as IDataVaultConfiguration;
-    edvConfig.controller = config.controller;
+enum invocationType {
+  Ed25519VerificationKey2020 = 'Ed25519VerificationKey2020',
+  HypersignEdvClientEcdsaSecp256k1 = 'HypersignEdvClientEcdsaSecp256k1',
+}
 
-    if (!KeyAgreementKeyTypes[config.keyAgreementKey.type]) {
-      throw new Error('Unsupported keyagreement type: ' + config.keyAgreementKey.type);
-    }
+enum keyagreementType {
+  X25519KeyAgreementKey2020 = 'X25519KeyAgreementKey2020',
+  X25519KeyAgreementKeyEIP5630 = 'X25519KeyAgreementKeyEIP5630',
+}
+interface InvocationKeyPair {
+  id: string;
+  type: invocationType;
+  controller: string;
+  publicKeyMultibase: string;
+  blockchainAccountId: string;
+  privateKeyMultibase: string;
+}
 
-    if (!HmacKeyTypes[config.hmac.type]) {
-      throw new Error('Unsupported hmac type: ' + config.hmac.type);
-    }
+interface KeyAgreementKeyPair {
+  id?: string;
+  controller?: string;
+  type: keyagreementType;
+  publicKeyMultibase: string;
+}
 
-    // Adding support for custom id
-    if (config.edvId) {
-      edvConfig.id = config.edvId;
-    }
+export default function HypersignEdvClient(params: {
+  url: string;
+  invocationKeyPair: InvocationKeyPair;
+  keyagreementKeyPair: KeyAgreementKeyPair;
+  keyResolver?: KeyResolver;
+  shaHmacKey2020?: {
+    id: string;
+    type: string;
+    key: string;
+  };
+}): HypersignEdvClientEd25519VerificationKey2020 | HypersignEdvClientEcdsaSecp256k1 {
+  // : HypersignEdvClientEcdsaSecp256k1 | HypersignEdvClientEd25519VerificationKey2020
 
-    edvConfig.keyAgreementKey = {
-      id: config.keyAgreementKey.id,
-      type: KeyAgreementKeyTypes[config.keyAgreementKey.type],
-    };
-    edvConfig.hmac = {
-      id: config.hmac.id,
-      type: HmacKeyTypes[config.hmac.type],
-    };
-    edvConfig.sequence = 0; // default values
-    edvConfig.referenceId = 'primary'; // default values
-    edvConfig.invoker = config.controller; // default values
-    edvConfig.delegator = config.controller; // default values
+  if (!params.url) throw new Error('edvsUrl is required');
+  if (!params.invocationKeyPair) throw new Error('InvocationKeyPair is required');
+  if (!params.keyagreementKeyPair) throw new Error('KeyAgreementKeyPair is required');
 
-    if (config.invoker) edvConfig.invoker = config.invoker;
-    if (config.referenceId) edvConfig.referenceId = config.referenceId;
-    if (config.delegator) edvConfig.delegator = config.delegator;
+  if (!params.invocationKeyPair.id) throw new Error('InvocationKeyPair.id is required');
+  if (!params.invocationKeyPair.type) throw new Error('InvocationKeyPair.type is required');
+  if (params.invocationKeyPair.type === invocationType.Ed25519VerificationKey2020 && !params.invocationKeyPair.publicKeyMultibase)
+    throw new Error('InvocationKeyPair.publicKeyMultibase is required');
+  if (
+    params.invocationKeyPair.type === invocationType.HypersignEdvClientEcdsaSecp256k1 &&
+    !params.invocationKeyPair.blockchainAccountId
+  )
+    throw new Error('InvocationKeyPair.blockchainAccountId is required');
 
-    const edvRegisterURl = this.edvsUrl + Config.APIs.edvAPI;
+  if (!params.keyagreementKeyPair.id) throw new Error('KeyAgreementKeyPair.id is required');
+  if (!params.keyagreementKeyPair.type) throw new Error('KeyAgreementKeyPair.type is required');
+  if (
+    params.keyagreementKeyPair.type === keyagreementType.X25519KeyAgreementKey2020 &&
+    !params.keyagreementKeyPair.publicKeyMultibase
+  )
+    throw new Error('KeyAgreementKeyPair.publicKeyMultibase is required');
+  if (
+    params.keyagreementKeyPair.type === keyagreementType.X25519KeyAgreementKeyEIP5630 &&
+    !params.keyagreementKeyPair.publicKeyMultibase
+  )
+    throw new Error('KeyAgreementKeyPair.publicKeyMultibase is required');
 
-    const resp: IDataVaultConfiguration = await Utils._makeAPICall({
-      url: edvRegisterURl,
-      method: 'POST',
-      body: edvConfig,
-    });
+  if (
+    params.invocationKeyPair.type === invocationType.Ed25519VerificationKey2020 &&
+    params.keyagreementKeyPair.type === keyagreementType.X25519KeyAgreementKey2020
+  ) {
+    if (!params.keyResolver) throw new Error('keyResolver is required');
+    return new HypersignEdvClientEd25519VerificationKey2020({
+      url: params.url,
+      ed25519VerificationKey2020: params.invocationKeyPair,
+      x25519KeyAgreementKey2020: params.keyagreementKeyPair,
+      keyResolver: params.keyResolver,
+      shaHmacKey2020: params.shaHmacKey2020,
+    }) as HypersignEdvClientEd25519VerificationKey2020;
+  } else {
+    return new HypersignEdvClientEcdsaSecp256k1({
+      url: params.url,
+      verificationMethod: params.invocationKeyPair,
 
-    // attaching the newly created edv id
-    edvConfig.id = resp.id;
-    return edvConfig;
-  }
-
-  /**
-   * Inserts a new docs in the data vault
-   * @param document doc to be updated in plain text
-   * @param documentId Id of the document
-   * @param edvId Id of the data vault
-   * @param sequence Optional sequence number, default is 0
-   * @returns updated document
-   */
-  public async insertDoc({
-    document,
-    documentId,
-    sequence,
-    edvId,
-  }: {
-    document: any;
-    documentId?: string;
-    sequence?: number;
-    edvId: string;
-  }) {
-    // encrypt the document
-    const jwe = await this.hsCipher.encryptObject({
-      plainObject: document,
-    });
-    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
-
-    // form the http request header by signing the header
-    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
-    const headers = {
-      // digest signature
-      // authorization header,
-      controller: this.ed25519VerificationKey2020.controller,
-      vermethodid: this.ed25519VerificationKey2020.id,
-      date: new Date().toUTCString(),
-    };
-    const method = 'POST';
-    const signedHeader = await this.hsHttpSigner.signHTTP({
-      url: edvDocAddUrl,
-      method,
-      headers,
-      encryptedObject: hsEncDoc.get(),
-      capabilityAction: 'write',
-    });
-
-    // make the call to store
-    const resp = await Utils._makeAPICall({
-      url: edvDocAddUrl,
-      method,
-      body: hsEncDoc.get(),
-      headers: signedHeader,
-    });
-
-    return resp;
-  }
-
-  /**
-   * Updates doc in the data vault
-   * @param document doc to be updated in plain text
-   * @param documentId Id of the document
-   * @param edvId Id of the data vault
-   * @param sequence Optional sequence number, default is 0
-   * @returns newly created document
-   */
-  public async updateDoc({
-    document,
-    documentId,
-    sequence,
-    edvId,
-  }: {
-    document: any;
-    documentId?: string;
-    sequence?: number;
-    edvId: string;
-  }) {
-    // encrypt the document
-    const jwe = await this.hsCipher.encryptObject({
-      plainObject: document,
-    });
-    const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
-
-    // form the http request header by signing the header
-    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document';
-    const headers = {
-      // digest signature
-      // authorization header,
-      controller: this.ed25519VerificationKey2020.controller,
-      vermethodid: this.ed25519VerificationKey2020.id,
-      date: new Date().toUTCString(),
-    };
-    const method = 'PUT';
-    const signedHeader = await this.hsHttpSigner.signHTTP({
-      url: edvDocAddUrl,
-      method,
-      headers,
-      encryptedObject: hsEncDoc.get(),
-      capabilityAction: 'write',
-    });
-
-    // make the call to store
-    const resp = await Utils._makeAPICall({
-      url: edvDocAddUrl,
-      method,
-      body: hsEncDoc.get(),
-      headers: signedHeader,
-    });
-
-    return resp;
-  }
-
-  /**
-   * Fetchs docs related to a particular documentId
-   * @param documentId Id of the document
-   * @param edvId Id of the data vault
-   * @param sequence Optional sequence number, default is 0
-   * @returns all documents (with sequences if not passed) for a documentId
-   */
-  public async fetchDoc({ documentId, edvId, sequence }: { documentId: string; edvId: string; sequence?: number }) {
-    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
-
-    //// TODO:  need to figure out how will it work in read capability
-    /// CAUTION:::  for time being, I have skipped signature verification wicich is security vulnerabilities
-
-    // // encrypt the document
-    // const jwe = await this.hsCipher.encryptObject({
-    //   plainObject: { foo: 'bar' },
-    // });
-    // const hsEncDoc = new HypersignEncryptedDocument({ jwe, id: documentId, sequence });
-
-    // const headers = {
-    //   // digest signature
-    //   // authorization header,
-    //   controller: this.ed25519VerificationKey2020.controller,
-    //   vermethodid: this.ed25519VerificationKey2020.id,
-    //   date: new Date().toUTCString(),
-    // };
-    // const method = 'GET';
-    // const signedHeader = await this.hsHttpSigner.signHTTP({
-    //   url: edvDocAddUrl,
-    //   method,
-    //   headers,
-    //   encryptedObject: hsEncDoc.get(), // TODO: not sure why its not working with empty object. for GET request what data does it expect??
-    //   capabilityAction: 'read',
-    // });
-
-    // make the call to store
-    const resp = await Utils._makeAPICall({
-      url: edvDocAddUrl,
-      method: 'GET',
-    });
-
-    return resp;
-  }
-
-  public async getEdvConfig(edvId: string) {
-    throw new Error('Method not implemented');
-  }
-
-  public async fetchAllDocs() {
-    throw new Error('Method not implemented');
-  }
-
-  public async deleteDoc({ documentId }) {
-    console.log({ documentId });
-
-    throw new Error('Method not implemented');
+      // Type Definition Inline
+      keyAgreement: {
+        id: params.keyagreementKeyPair.id,
+        type: 'X25519KeyAgreementKeyEIP5630',
+        publicKeyMultibase: params.keyagreementKeyPair.publicKeyMultibase,
+        controller: params.keyagreementKeyPair.controller,
+      },
+    }) as HypersignEdvClientEcdsaSecp256k1;
   }
 }

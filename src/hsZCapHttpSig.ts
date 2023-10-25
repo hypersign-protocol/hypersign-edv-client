@@ -6,14 +6,15 @@
 
 import { signCapabilityInvocation } from '@digitalbazaar/http-signature-zcap-invoke';
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
-import { VerificationKeyTypes } from './hsEdvDataModels';
+import { signHTTPHeaders } from './Types';
 
 // Authorization Capabilities via HTTP signatures
 export default class HypersignZCapHttpSigner {
-  private keyAgreementKey: Ed25519VerificationKey2020;
+  private capabilityInvocationKey: Ed25519VerificationKey2020;
+  // capabilityInvocationKey: any;
 
-  constructor({ keyAgreementKey }: { keyAgreementKey: Ed25519VerificationKey2020 }) {
-    this.keyAgreementKey = keyAgreementKey;
+  constructor({ capabilityInvocationKey }: { capabilityInvocationKey: Ed25519VerificationKey2020 }) {
+    this.capabilityInvocationKey = capabilityInvocationKey;
   }
 
   // public async _getEd25519KeyPair(): Promise<Ed25519VerificationKey2020> {
@@ -36,8 +37,8 @@ export default class HypersignZCapHttpSigner {
   }: {
     url: string;
     method: string;
-    headers: object;
-    encryptedObject: object;
+    headers: signHTTPHeaders;
+    encryptedObject: Object | undefined;
     capabilityAction: string;
   }) {
     const signedHeader = await signCapabilityInvocation({
@@ -45,7 +46,7 @@ export default class HypersignZCapHttpSigner {
       method,
       headers,
       json: encryptedObject,
-      invocationSigner: this.keyAgreementKey.signer(),
+      invocationSigner: this.capabilityInvocationKey.signer(),
       capabilityAction,
     });
     return signedHeader;

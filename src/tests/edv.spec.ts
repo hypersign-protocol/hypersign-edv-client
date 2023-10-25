@@ -1,14 +1,16 @@
+import  HypersignEdvClientEd25519VerificationKey2020  from '../HypersignEdvClientEd25519VerificationKey2020';
 import { HypersignEdvClient } from '../index';
 import { Ed25519Keypair, authenticationKey, hypersignDIDKeyResolverForEd25519KeyPair } from './key.spec'
-
+import {X25519KeyAgreementKey2020} from '@digitalbazaar/x25519-key-agreement-key-2020'
 async function createClient() {
   const url = 'http://localhost:3001';
   const ed25519Keypair = await Ed25519Keypair(authenticationKey) 
-  return new HypersignEdvClient({keyResolver: hypersignDIDKeyResolverForEd25519KeyPair, url, ed25519VerificationKey2020: ed25519Keypair});
+  const x25519KeyPair=X25519KeyAgreementKey2020.fromEd25519VerificationKey2020(ed25519Keypair)
+  return  HypersignEdvClient({keyResolver: hypersignDIDKeyResolverForEd25519KeyPair, url, invocationKeyPair:  ed25519Keypair,keyagreementKeyPair:x25519KeyPair}) as HypersignEdvClientEd25519VerificationKey2020;
 }
 
 async function register(){
-  const hsEDVClient = await createClient();
+  const hsEDVClient = await createClient() ;
 
   const config = {
     controller: 'did:example:123456789',
@@ -31,12 +33,16 @@ async function register(){
   const m = { 'foo': 'bar' };
 
   // Inserting a doc in edv
-  const res = await hsEDVClient.insertDoc({document: m, edvId});
+  const res = await hsEDVClient.insertDoc({
+    document: m,
+    edvId,
+
+  });
   console.log(res)
 
   // updating a doc 1st time
   m.foo = 'bar2'; 
-  const { id } = res; 
+  const { id } = res.document; 
   const res2 = await hsEDVClient.updateDoc({document: m, documentId: id, edvId});
   console.log(res2)
 

@@ -5,14 +5,13 @@
  * Author: Vishwas Anand Bhushan (Github @ vishwas1)
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var Defaults = {
+const Defaults = {
     edvsBaseURl: 'http://localhost:3001',
 };
-var APIs = {
-    edvAPI: '/api/v1/edv',
-    edvDocAPI: '/api/v1/edv/<EDVID>/document',
+const APIs = {
+    edvAPI: 'api/v1/vault',
 };
 exports.default = {
-    Defaults: Defaults,
-    APIs: APIs,
+    Defaults,
+    APIs,
 };
