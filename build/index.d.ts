@@ -8,7 +8,8 @@ import HypersignEdvClientEd25519VerificationKey2020 from './HypersignEdvClientEd
 import HypersignCipher from './hsCipher';
 import HypersignZCapHttpSigner from './hsZCapHttpSig';
 import HypersignEdvClientEcdsaSecp256k1 from './HypersignEdvClientEcdsaSecp256k1';
+import * as Types from './Types';
 import { IndexHelper } from './IndexHelper';
 import Hmac from './Hmac';
-export { HypersignEdvClient, HypersignCipher, HypersignZCapHttpSigner, HypersignEdvClientEcdsaSecp256k1, Hmac, IndexHelper, HypersignEdvClientEd25519VerificationKey2020, };
+export { HypersignEdvClient, HypersignCipher, HypersignZCapHttpSigner, HypersignEdvClientEcdsaSecp256k1, Hmac, IndexHelper, HypersignEdvClientEd25519VerificationKey2020, Types, };
 //# sourceMappingURL=index.d.ts.map

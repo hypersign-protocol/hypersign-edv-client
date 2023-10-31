@@ -200,7 +200,7 @@ class HypersignEdvClientEcdsaSecp256k1 {
                 headers,
             });
             // attaching the newly created edv id
-            edvConfig.id = resp.id;
+            edvConfig.id = resp.vault.id;
             return edvConfig;
         });
     }
