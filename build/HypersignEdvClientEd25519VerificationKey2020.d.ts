@@ -109,9 +109,10 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
         };
         has?: Array<string>;
     }): Promise<any>;
-    deleteDoc({ documentId }: {
+    deleteDoc({ edvId, documentId }: {
+        edvId: any;
         documentId: any;
-    }): Promise<void>;
+    }): Promise<any>;
     decryptObject({ jwe, keyAgreementKey }: {
         jwe: any;
         keyAgreementKey: any;
