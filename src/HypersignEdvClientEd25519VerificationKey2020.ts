@@ -494,6 +494,34 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
     return resp;
   }
 
+  public async deleteVaultData({ edvId }) {
+    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId;
+
+    const method = 'DELETE';
+    const headers = {
+      // digest signature
+      // authorization header,
+      controller: this.ed25519VerificationKey2020.controller,
+      vermethodid: this.ed25519VerificationKey2020.id,
+      date: new Date().toUTCString(),
+    };
+    const signedHeader = await this.hsHttpSigner.signHTTP({
+      url: edvDocAddUrl,
+      method,
+      headers,
+      encryptedObject: undefined,
+      capabilityAction: 'write',
+    });
+
+    const resp = await Utils._makeAPICall({
+      url: edvDocAddUrl,
+      method: 'DELETE',
+      headers: signedHeader,
+    });
+
+    return resp;
+  }
+
   public async decryptObject({ jwe, keyAgreementKey }) {
     return this.hsCipher.decryptObject({
       jwe,

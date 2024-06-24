@@ -389,6 +389,32 @@ class HypersignEdvClientEd25519VerificationKey2020 {
             return resp;
         });
     }
+    deleteVaultData({ edvId }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const edvDocAddUrl = this.edvsUrl + config_1.default.APIs.edvAPI + '/' + edvId;
+            const method = 'DELETE';
+            const headers = {
+                // digest signature
+                // authorization header,
+                controller: this.ed25519VerificationKey2020.controller,
+                vermethodid: this.ed25519VerificationKey2020.id,
+                date: new Date().toUTCString(),
+            };
+            const signedHeader = yield this.hsHttpSigner.signHTTP({
+                url: edvDocAddUrl,
+                method,
+                headers,
+                encryptedObject: undefined,
+                capabilityAction: 'write',
+            });
+            const resp = yield utils_1.default._makeAPICall({
+                url: edvDocAddUrl,
+                method: 'DELETE',
+                headers: signedHeader,
+            });
+            return resp;
+        });
+    }
     decryptObject({ jwe, keyAgreementKey }) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.hsCipher.decryptObject({
