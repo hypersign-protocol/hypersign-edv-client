@@ -125,7 +125,7 @@ class HypersignEdvClientEd25519VerificationKey2020 {
                 headers: signedHeader,
             });
             // attaching the newly created edv id
-            console.log(resp);
+            // console.log(resp);
             edvConfig.id = resp.vault.id;
             return edvConfig;
         });

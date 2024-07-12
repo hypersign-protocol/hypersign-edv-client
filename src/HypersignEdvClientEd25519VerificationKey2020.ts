@@ -165,7 +165,7 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
     });
 
     // attaching the newly created edv id
-    console.log(resp);
+    // console.log(resp);
 
     edvConfig.id = resp.vault.id;
     return edvConfig;
