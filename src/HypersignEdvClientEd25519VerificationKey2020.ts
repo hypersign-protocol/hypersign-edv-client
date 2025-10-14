@@ -165,7 +165,7 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
     });
 
     // attaching the newly created edv id
-    console.log(resp);
+    // console.log(resp);
 
     edvConfig.id = resp.vault.id;
     return edvConfig;
@@ -466,8 +466,60 @@ export default class HypersignEdvClientEd25519VerificationKey2020 {
     return resp;
   }
 
-  public async deleteDoc({ documentId }) {
-    throw new Error('Method not implemented');
+  public async deleteDoc({ edvId, documentId }) {
+    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId + '/document/' + documentId;
+
+    const method = 'DELETE';
+    const headers = {
+      // digest signature
+      // authorization header,
+      controller: this.ed25519VerificationKey2020.controller,
+      vermethodid: this.ed25519VerificationKey2020.id,
+      date: new Date().toUTCString(),
+    };
+    const signedHeader = await this.hsHttpSigner.signHTTP({
+      url: edvDocAddUrl,
+      method,
+      headers,
+      encryptedObject: undefined,
+      capabilityAction: 'write',
+    });
+
+    const resp = await Utils._makeAPICall({
+      url: edvDocAddUrl,
+      method: 'DELETE',
+      headers: signedHeader,
+    });
+
+    return resp;
+  }
+
+  public async deleteVaultData({ edvId }) {
+    const edvDocAddUrl = this.edvsUrl + Config.APIs.edvAPI + '/' + edvId;
+
+    const method = 'DELETE';
+    const headers = {
+      // digest signature
+      // authorization header,
+      controller: this.ed25519VerificationKey2020.controller,
+      vermethodid: this.ed25519VerificationKey2020.id,
+      date: new Date().toUTCString(),
+    };
+    const signedHeader = await this.hsHttpSigner.signHTTP({
+      url: edvDocAddUrl,
+      method,
+      headers,
+      encryptedObject: undefined,
+      capabilityAction: 'write',
+    });
+
+    const resp = await Utils._makeAPICall({
+      url: edvDocAddUrl,
+      method: 'DELETE',
+      headers: signedHeader,
+    });
+
+    return resp;
   }
 
   public async decryptObject({ jwe, keyAgreementKey }) {
