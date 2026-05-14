@@ -145,7 +145,7 @@ export default class HypersignCipher {
     keyAgreementKey = this.keyAgreementKey,
   }: IEncryptionRequest): Promise<{ jwe: IJWE; encryptedData: IEncryptedData }> {
     // worng way of doing it
-    console.log('keyAgreementKey', keyAgreementKey);
+    // console.log('keyAgreementKey', keyAgreementKey);
 
     const x25519keyAgreementKey = await this._getX25519KeyAgreementKey(keyAgreementKey);
     let allRecipient: Array<IRecipents>;
